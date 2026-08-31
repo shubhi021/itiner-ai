@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import Svg, { Path, Circle, G, Rect } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
@@ -98,8 +99,18 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
     }).start();
 
     // Automatically navigate after animation finishes
-    const timer = setTimeout(() => {
-      navigation.replace('TripForm');
+    const timer = setTimeout(async () => {
+      try {
+        const hasCompleted = await AsyncStorage.getItem('@has_completed_onboarding');
+        if (hasCompleted === 'true') {
+          navigation.replace('MainTabs', { screen: 'Plan' });
+        } else {
+          navigation.replace('Onboarding');
+        }
+      } catch (error) {
+        // Fallback to onboarding if there's an error reading
+        navigation.replace('Onboarding');
+      }
     }, 2000);
     return () => clearTimeout(timer);
   }, [navigation, progressAnim, fadeAnim]);
