@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,20 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
-import {CompositeScreenProps} from '@react-navigation/native';
-import {RootStackParamList, MainTabParamList} from '../navigation/types';
-import {BudgetSelector} from '../components/BudgetSelector';
-import {InterestChip} from '../components/InterestChip';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { CompositeScreenProps } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootStackParamList, MainTabParamList } from '../navigation/types';
+import {
+  setDestination as setReduxDestination,
+  setDays as setReduxDays,
+  setBudget as setReduxBudget,
+  toggleInterest as toggleReduxInterest,
+  selectIsFormValid
+} from '../store/tripSlice';
+import { BudgetSelector } from '../components/BudgetSelector';
+import { InterestChip } from '../components/InterestChip';
 import {
   MapPin,
   Palmtree,
@@ -29,7 +37,12 @@ import {
   Palette,
   ShoppingBag,
   ArrowRight,
+  X,
+  ChevronDown,
+  ChevronRight,
+  SlidersHorizontal,
 } from 'lucide-react-native';
+import { RootState } from '../store';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Plan'>,
@@ -55,7 +68,7 @@ const MOODS = [
 ];
 
 const TRENDING = [
-  { id: '1', city: 'Lisbon, Portugal', subtext: '12 travelers planning now', image: 'https://images.unsplash.com/photo-1585244585141-8889417d4722?q=80&w=400&auto=format&fit=crop' },
+  { id: '1', city: 'Lisbon, Portugal', subtext: '12 travelers planning now', badge: 'POPULAR', image: 'https://images.unsplash.com/photo-1585244585141-8889417d4722?q=80&w=400&auto=format&fit=crop' },
   { id: '2', city: 'Ubud, Indonesia', subtext: 'Trending this week', image: 'https://images.unsplash.com/photo-1559628233-eb1b1a45564b?q=80&w=400&auto=format&fit=crop' },
   { id: '3', city: 'Positano, Italy', subtext: 'Hot summer choice', image: 'https://images.unsplash.com/photo-1533682805518-48d1f5b8cb3a?q=80&w=400&auto=format&fit=crop' }
 ];
@@ -76,30 +89,39 @@ const SUGGESTIONS = [
 ];
 
 export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
+  const dispatch = useDispatch();
+
+  const destination = useSelector((state: RootState) => state.trip.destination);
+  const days = useSelector((state: RootState) => state.trip.days);
+  const budget = useSelector((state: RootState) => state.trip.budget) as Budget;
+  const interests = useSelector((state: RootState) => state.trip.interests);
+  const isFormValid = useSelector(selectIsFormValid);
+
   const [mood, setMood] = useState('city');
-  const [destination, setDestination] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [isDestinationSelected, setIsDestinationSelected] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [days, setDays] = useState(5);
-  const [budget, setBudget] = useState<Budget>('medium');
-  const [interests, setInterests] = useState<string[]>([]);
 
   const handleToggleInterest = (interest: string) => {
-    setInterests(prev =>
-      prev.includes(interest)
-        ? prev.filter(i => i !== interest)
-        : prev.length < 5
-        ? [...prev, interest]
-        : prev
-    );
+    dispatch(toggleReduxInterest(interest));
   };
 
   const handleDestinationChange = (text: string) => {
-    setDestination(text);
+    setSearchInput(text);
     setShowDropdown(text.length > 0);
   };
 
   const handleSelectSuggestion = (suggestion: string) => {
-    setDestination(suggestion);
+    dispatch(setReduxDestination(suggestion));
+    setSearchInput('');
+    setIsDestinationSelected(true);
+    setShowDropdown(false);
+  };
+
+  const clearDestination = () => {
+    dispatch(setReduxDestination(''));
+    setSearchInput('');
+    setIsDestinationSelected(false);
     setShowDropdown(false);
   };
 
@@ -107,17 +129,64 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('Loading');
   };
 
+  const filteredSuggestions = SUGGESTIONS.filter(s =>
+    s.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
+  const getBudgetEstimate = () => {
+    switch (budget) {
+      case 'low': return 'EST. €40-80 / DAY';
+      case 'high': return 'EST. €150-300+ / DAY';
+      case 'medium':
+      default: return 'EST. €80-150 / DAY';
+    }
+  };
+
+  const calculateProgress = () => {
+    let progress = 0;
+    if (mood) progress++; // Step 1: Mood
+    if (isDestinationSelected) progress++; // Step 2: Destination
+    if (days && budget) progress++; // Step 3: Logistics
+    if (interests.length > 0) progress++; // Step 4: Interests
+    return Math.min(4, progress);
+  };
+
+  const progress = calculateProgress();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.flex1}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={styles.flex1} contentContainerStyle={styles.scrollContent}>
-          
+
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.greeting}>Hi Sarah 👋</Text>
+            <View style={styles.greetingRow}>
+              <Text style={styles.greeting}>Hi Sarah 👋</Text>
+              <View style={styles.progressContainer}>
+                {[1, 2, 3, 4].map((step) => (
+                  <View
+                    key={step}
+                    style={[
+                      styles.progressBar,
+                      step <= progress && styles.progressActive
+                    ]}
+                  />
+                ))}
+              </View>
+            </View>
             <Text style={styles.heading}>Where to next?</Text>
+
+            {isDestinationSelected && (
+              <View style={styles.selectedDestinationPill}>
+                <MapPin color={COLORS.coral} size={14} />
+                <Text style={styles.selectedDestinationText}>{destination}</Text>
+                <TouchableOpacity style={styles.removeDestinationBtn} onPress={clearDestination}>
+                  <X color="#9CA3AF" size={14} />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* Mood Tiles */}
@@ -150,61 +219,79 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.sectionTitle}>TRENDING DESTINATIONS</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingScroll}>
               {TRENDING.map(t => (
-                <View key={t.id} style={styles.trendingCard}>
-                  <Image source={{ uri: t.image }} style={styles.trendingImage} />
+                <TouchableOpacity
+                  key={t.id}
+                  style={styles.trendingCard}
+                  activeOpacity={0.9}
+                  onPress={() => handleSelectSuggestion(t.city)}
+                >
+                  <View style={styles.imageContainer}>
+                    <Image source={{ uri: t.image }} style={styles.trendingImage} />
+                    {t.badge && (
+                      <View style={styles.badgeContainer}>
+                        <Text style={styles.badgeText}>{t.badge}</Text>
+                      </View>
+                    )}
+                  </View>
                   <View style={styles.trendingInfo}>
                     <Text style={styles.trendingCity}>{t.city}</Text>
                     <Text style={styles.trendingSubtext}>{t.subtext}</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
           {/* Destination Input */}
-          <View style={[styles.section, { zIndex: 10 }]}>
-            <Text style={styles.label}>Destination</Text>
-            <View style={styles.inputContainer}>
-              <MapPin color={COLORS.gray} size={20} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Where do you want to go?"
-                placeholderTextColor="#9CA3AF"
-                value={destination}
-                onChangeText={handleDestinationChange}
-                onFocus={() => destination.length > 0 && setShowDropdown(true)}
-              />
-            </View>
-            
-            {showDropdown && (
-              <View style={styles.dropdown}>
-                {SUGGESTIONS.map((s, idx) => (
-                  <TouchableOpacity 
-                    key={s} 
-                    style={[styles.dropdownItem, idx !== SUGGESTIONS.length - 1 && styles.dropdownBorder]}
-                    onPress={() => handleSelectSuggestion(s)}
-                  >
-                    <MapPin color={idx === 0 ? COLORS.coral : COLORS.gray} size={18} />
-                    <Text style={[styles.dropdownText, idx === 0 && styles.dropdownTextActive]}>{s}</Text>
-                  </TouchableOpacity>
-                ))}
+          {!isDestinationSelected && (
+            <View style={[styles.section, { zIndex: 10 }]}>
+              <Text style={styles.label}>Destination</Text>
+              <View style={styles.inputContainer}>
+                <MapPin color={COLORS.gray} size={20} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Where do you want to go?"
+                  placeholderTextColor="#9CA3AF"
+                  value={searchInput}
+                  onChangeText={handleDestinationChange}
+                  onFocus={() => searchInput.length > 0 && setShowDropdown(true)}
+                />
               </View>
-            )}
-          </View>
 
-          {/* Days */}
+              {showDropdown && filteredSuggestions.length > 0 && (
+                <View style={styles.dropdown}>
+                  {filteredSuggestions.map((s, idx) => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[styles.dropdownItem, idx !== filteredSuggestions.length - 1 && styles.dropdownBorder]}
+                      onPress={() => handleSelectSuggestion(s)}
+                    >
+                      <MapPin color={idx === 0 ? COLORS.coral : '#9CA3AF'} size={16} />
+                      <Text style={[styles.dropdownText, idx === 0 && styles.dropdownTextActive]}>{s}</Text>
+                      {idx === 0 && <ChevronRight color="#D1D5DB" size={16} style={{ marginLeft: 'auto' }} />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Trip length */}
           <View style={styles.section}>
-            <Text style={styles.label}>Days</Text>
+            <Text style={styles.label}>Trip length</Text>
             <View style={styles.stepperContainer}>
               <TouchableOpacity
                 style={styles.stepperButton}
-                onPress={() => setDays(Math.max(1, days - 1))}>
+                onPress={() => dispatch(setReduxDays(Math.max(1, days - 1)))}>
                 <Text style={styles.stepperButtonText}>-</Text>
               </TouchableOpacity>
-              <Text style={styles.stepperValue}>{days}</Text>
+              <View style={styles.stepperValueContainer}>
+                <Text style={styles.stepperValue}>{days}</Text>
+                <Text style={styles.stepperLabel}>DAYS</Text>
+              </View>
               <TouchableOpacity
                 style={styles.stepperButton}
-                onPress={() => setDays(Math.min(30, days + 1))}>
+                onPress={() => dispatch(setReduxDays(Math.min(30, days + 1)))}>
                 <Text style={styles.stepperButtonText}>+</Text>
               </TouchableOpacity>
             </View>
@@ -213,16 +300,23 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
           {/* Budget */}
           <View style={styles.section}>
             <Text style={styles.label}>Budget</Text>
-            <BudgetSelector selectedBudget={budget} onSelect={setBudget} />
+            <BudgetSelector selectedBudget={budget} onSelect={(val) => dispatch(setReduxBudget(val))} />
+            <View style={styles.budgetEstimateContainer}>
+              <Text style={styles.budgetEstimate}>{getBudgetEstimate()}</Text>
+            </View>
           </View>
 
           {/* Interests */}
           <View style={styles.section}>
             <View style={styles.interestsHeader}>
-              <Text style={styles.label}>What are you into?</Text>
+              <View style={styles.interestsTitleRow}>
+                <Text style={styles.label}>Interests</Text>
+                <View style={styles.interestCountBadge}>
+                  <Text style={styles.interestCountText}>{interests.length}/5 selected</Text>
+                </View>
+              </View>
               <Text style={styles.interestsLimit}>SELECT UP TO 5</Text>
             </View>
-            <Text style={styles.helperText}>This helps us shape your perfect itinerary</Text>
             <View style={styles.chipsContainer}>
               {INTERESTS.map(interest => {
                 const isSelected = interests.includes(interest.id);
@@ -240,11 +334,20 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
 
+          {/* Advanced options */}
+          <View style={styles.advancedOptions}>
+            <View style={styles.advancedOptionsLeft}>
+              <SlidersHorizontal color="#9CA3AF" size={18} />
+              <Text style={styles.advancedOptionsText}>Advanced options</Text>
+            </View>
+            <ChevronDown color="#9CA3AF" size={18} />
+          </View>
+
           {/* Footer branding */}
           <View style={styles.footerBranding}>
-            <Text style={styles.footerBrandingText}>Powered by AI • Personalized in seconds</Text>
+            <Text style={styles.footerBrandingText}>POWERED BY AI • PERSONALIZED IN SECONDS</Text>
           </View>
-          
+
           {/* Spacer for fixed button */}
           <View style={{ height: 80 }} />
         </ScrollView>
@@ -252,8 +355,9 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
         {/* Fixed Submit Button */}
         <View style={styles.fixedFooter}>
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[styles.submitButton, !isFormValid && { opacity: 0.6 }]}
             onPress={handleSubmit}
+            disabled={!isFormValid}
             activeOpacity={0.9}>
             <Text style={styles.submitButtonText}>Generate Itinerary</Text>
             <ArrowRight color={COLORS.white} size={20} style={{ marginLeft: 8 }} />
@@ -424,8 +528,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.lightGray,
     borderRadius: 16,
-    height: 56,
-    width: 140,
+    height: 64,
+    width: '100%',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
   },
@@ -452,7 +556,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 16,
   },
   interestsLimit: {
     fontSize: 10,
@@ -508,4 +612,131 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: '700',
   },
+  greetingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressBar: {
+    width: 24,
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    marginLeft: 4,
+  },
+  progressActive: {
+    backgroundColor: COLORS.coral,
+  },
+  selectedDestinationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  selectedDestinationText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.teal,
+    marginLeft: 6,
+    marginRight: 8,
+  },
+  removeDestinationBtn: {
+    padding: 2,
+  },
+  imageContainer: {
+    position: 'relative',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.teal,
+    letterSpacing: 0.5,
+  },
+  stepperValueContainer: {
+    alignItems: 'center',
+  },
+  stepperLabel: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  budgetEstimateContainer: {
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  budgetEstimate: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  interestsTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  interestCountBadge: {
+    backgroundColor: '#FFF0ED',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 12,
+  },
+  interestCountText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.coral,
+  },
+  advancedOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F3F4F6',
+    marginBottom: 20,
+    backgroundColor: '#FFF',
+  },
+  advancedOptionsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  advancedOptionsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.teal,
+    marginLeft: 12,
+  },
 });
+

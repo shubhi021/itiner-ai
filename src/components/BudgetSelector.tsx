@@ -59,11 +59,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   selectedOption: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#0F4C5C',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
     elevation: 2,
   },
   text: {
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   selectedText: {
-    color: colors.textPrimary,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
 });
