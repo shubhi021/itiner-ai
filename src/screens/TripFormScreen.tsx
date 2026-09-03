@@ -1,3 +1,4 @@
+import { fp } from '../utils/responsive';
 import React, { useState } from 'react';
 import {
   View,
@@ -385,13 +386,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   greeting: {
-    fontSize: 14,
+    fontSize: fp(1.4),
     fontWeight: '600',
     color: '#9CA3AF',
     marginBottom: 4,
   },
   heading: {
-    fontSize: 32,
+    fontSize: fp(3.2),
     fontWeight: '800',
     color: COLORS.teal,
     letterSpacing: -0.5,
@@ -417,12 +418,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.coral,
   },
   moodLabel: {
-    fontSize: 12,
+    fontSize: fp(1.2),
     fontWeight: '700',
     color: COLORS.teal,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: fp(1.1),
     fontWeight: '700',
     color: '#9CA3AF',
     letterSpacing: 1.5,
@@ -452,17 +453,17 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   trendingCity: {
-    fontSize: 14,
+    fontSize: fp(1.4),
     fontWeight: '700',
     color: COLORS.teal,
     marginBottom: 2,
   },
   trendingSubtext: {
-    fontSize: 10,
+    fontSize: fp(1.0),
     color: '#9CA3AF',
   },
   label: {
-    fontSize: 14,
+    fontSize: fp(1.4),
     fontWeight: '600',
     color: COLORS.teal,
     marginBottom: 8,
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: fp(1.6),
     color: COLORS.teal,
     height: '100%',
   },
@@ -513,7 +514,7 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     marginLeft: 12,
-    fontSize: 15,
+    fontSize: fp(1.5),
     color: COLORS.teal,
     fontWeight: '500',
   },
@@ -542,13 +543,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepperButtonText: {
-    fontSize: 20,
+    fontSize: fp(2.0),
     color: COLORS.teal,
     fontWeight: '600',
     lineHeight: 22,
   },
   stepperValue: {
-    fontSize: 18,
+    fontSize: fp(1.8),
     fontWeight: '700',
     color: COLORS.teal,
   },
@@ -559,13 +560,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   interestsLimit: {
-    fontSize: 10,
+    fontSize: fp(1.0),
     fontWeight: '700',
     color: '#9CA3AF',
     letterSpacing: 1,
   },
   helperText: {
-    fontSize: 13,
+    fontSize: fp(1.3),
     color: '#9CA3AF',
     marginBottom: 16,
   },
@@ -579,7 +580,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   footerBrandingText: {
-    fontSize: 11,
+    fontSize: fp(1.1),
     color: '#9CA3AF',
     fontWeight: '600',
   },
@@ -608,7 +609,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   submitButtonText: {
-    fontSize: 17,
+    fontSize: fp(1.7),
     color: COLORS.white,
     fontWeight: '700',
   },
@@ -650,7 +651,7 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
   },
   selectedDestinationText: {
-    fontSize: 13,
+    fontSize: fp(1.3),
     fontWeight: '700',
     color: COLORS.teal,
     marginLeft: 6,
@@ -672,7 +673,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: fp(0.9),
     fontWeight: '800',
     color: COLORS.teal,
     letterSpacing: 0.5,
@@ -681,7 +682,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepperLabel: {
-    fontSize: 10,
+    fontSize: fp(1.0),
     color: '#9CA3AF',
     fontWeight: '600',
     marginTop: 2,
@@ -691,7 +692,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   budgetEstimate: {
-    fontSize: 11,
+    fontSize: fp(1.1),
     fontWeight: '700',
     color: '#9CA3AF',
     backgroundColor: '#F3F4F6',
@@ -712,7 +713,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   interestCountText: {
-    fontSize: 10,
+    fontSize: fp(1.0),
     fontWeight: '700',
     color: COLORS.coral,
   },
@@ -733,7 +734,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   advancedOptionsText: {
-    fontSize: 14,
+    fontSize: fp(1.4),
     fontWeight: '600',
     color: COLORS.teal,
     marginLeft: 12,

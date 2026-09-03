@@ -1,3 +1,4 @@
+import { fp } from '../utils/responsive';
 import React, { useRef, useState } from 'react';
 import { 
   View, 
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   skipText: {
-    fontSize: 16,
+    fontSize: fp(1.6),
     color: '#9CA3AF',
     fontWeight: '600',
   },
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: fp(2.8),
     fontWeight: '800',
     color: '#0F4C5C',
     textAlign: 'center',
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
     lineHeight: 34,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fp(1.6),
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 24,
@@ -213,14 +214,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
   },
   button: {
-    backgroundColor: '#FF6B4A',
+    backgroundColor: '#0F4C5C',
     width: '100%',
     paddingVertical: 18,
     borderRadius: 16,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FF6B4A',
+    shadowColor: '#0F4C5C',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: fp(1.7),
     fontWeight: '700',
   },
 });

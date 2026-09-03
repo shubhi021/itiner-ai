@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { fp } from '../utils/responsive';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import Svg, { Path, Circle, G, Rect } from 'react-native-svg';
@@ -250,14 +251,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   title: {
-    fontSize: 36,
+    fontSize: fp(3.6),
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
     marginBottom: 6,
   },
   tagline: {
-    fontSize: 16,
+    fontSize: fp(1.6),
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.9)',
   },
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   bottomText: {
-    fontSize: 10,
+    fontSize: fp(1.0),
     fontWeight: '700',
     color: 'rgba(255, 255, 255, 0.6)',
     letterSpacing: 2,

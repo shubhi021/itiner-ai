@@ -1,18 +1,19 @@
+import { fp } from '../utils/responsive';
 export const typography = {
   heading: {
-    fontSize: 24,
+    fontSize: fp(2.4),
     fontWeight: '700' as const,
   },
   subheading: {
-    fontSize: 18,
+    fontSize: fp(1.8),
     fontWeight: '600' as const,
   },
   body: {
-    fontSize: 16,
+    fontSize: fp(1.6),
     fontWeight: '400' as const,
   },
   caption: {
-    fontSize: 14,
+    fontSize: fp(1.4),
     fontWeight: '400' as const,
   },
 };

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { fp } from '../utils/responsive';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { Globe, Plane } from 'lucide-react-native';
@@ -178,14 +179,14 @@ const styles = StyleSheet.create({
     height: 80,
   },
   title: {
-    fontSize: 22,
+    fontSize: fp(2.2),
     fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: fp(1.3),
     color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
   },
