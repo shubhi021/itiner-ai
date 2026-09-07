@@ -1,4 +1,4 @@
-import { fp } from '../utils/responsive';
+import {fp} from '../utils/responsive';
 export const typography = {
   heading: {
     fontSize: fp(2.4),

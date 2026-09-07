@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { fp } from '../utils/responsive';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { Globe, Plane } from 'lucide-react-native';
-import Svg, { Path } from 'react-native-svg';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet} from 'react-native';
+import {fp} from '../utils/responsive';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {Globe, Plane} from 'lucide-react-native';
+import Svg, {Path} from 'react-native-svg';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
   withRepeat,
   Easing,
   interpolate,
-  runOnJS
+  runOnJS,
 } from 'react-native-reanimated';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Loading'>;
@@ -21,35 +21,39 @@ const SVG_WIDTH = 240;
 const SVG_HEIGHT = 160;
 
 const LOADING_TEXTS = [
-  "Finding the best spots...",
-  "Building your itinerary...",
-  "Almost there..."
+  'Finding the best spots...',
+  'Building your itinerary...',
+  'Almost there...',
 ];
 
-export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
+export const LoadingScreen: React.FC<Props> = ({navigation}) => {
   const [textIndex, setTextIndex] = useState(0);
-  
+
   // Animation values
   const progress = useSharedValue(0);
   const globeGlow = useSharedValue(0.4);
 
   useEffect(() => {
     // Total loading time 6 seconds
-    progress.value = withTiming(1, { duration: 6000, easing: Easing.linear }, (finished) => {
-      if (finished) {
-        runOnJS(navigation.replace)('TripSummary');
-      }
-    });
-    
+    progress.value = withTiming(
+      1,
+      {duration: 6000, easing: Easing.linear},
+      finished => {
+        if (finished) {
+          runOnJS(navigation.replace)('TripSummary');
+        }
+      },
+    );
+
     // Globe glow/pulse loop
     globeGlow.value = withRepeat(
-      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+      withTiming(1, {duration: 1200, easing: Easing.inOut(Easing.ease)}),
       -1,
-      true
+      true,
     );
 
     const interval = setInterval(() => {
-      setTextIndex((prev) => Math.min(prev + 1, LOADING_TEXTS.length - 1));
+      setTextIndex(prev => Math.min(prev + 1, LOADING_TEXTS.length - 1));
     }, 2000);
 
     return () => {
@@ -58,16 +62,22 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
   }, [navigation, progress, globeGlow]);
 
   // Quadratic Bezier Curve points (bottom-left to top-right)
-  const p0 = { x: 20, y: 140 };
-  const p1 = { x: 60, y: 10 };
-  const p2 = { x: 220, y: 20 };
+  const p0 = {x: 20, y: 140};
+  const p1 = {x: 60, y: 10};
+  const p2 = {x: 220, y: 20};
 
   const planeAnimatedStyle = useAnimatedStyle(() => {
     const t = progress.value;
-    
+
     // Position on Bezier curve
-    const x = Math.pow(1 - t, 2) * p0.x + 2 * (1 - t) * t * p1.x + Math.pow(t, 2) * p2.x;
-    const y = Math.pow(1 - t, 2) * p0.y + 2 * (1 - t) * t * p1.y + Math.pow(t, 2) * p2.y;
+    const x =
+      Math.pow(1 - t, 2) * p0.x +
+      2 * (1 - t) * t * p1.x +
+      Math.pow(t, 2) * p2.x;
+    const y =
+      Math.pow(1 - t, 2) * p0.y +
+      2 * (1 - t) * t * p1.y +
+      Math.pow(t, 2) * p2.y;
 
     // Derivative for rotation (tangent angle)
     const dx = 2 * (1 - t) * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
@@ -76,11 +86,16 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
 
     return {
       transform: [
-        { translateX: x - SVG_WIDTH / 2 },
-        { translateY: y - SVG_HEIGHT / 2 },
-        { rotate: `${angle + 45}deg` } // Lucide plane points top-right natively
+        {translateX: x - SVG_WIDTH / 2},
+        {translateY: y - SVG_HEIGHT / 2},
+        {rotate: `${angle + 45}deg`}, // Lucide plane points top-right natively
       ],
-      opacity: t < 0.05 ? interpolate(t, [0, 0.05], [0, 1]) : t > 0.95 ? interpolate(t, [0.95, 1], [1, 0]) : 1,
+      opacity:
+        t < 0.05
+          ? interpolate(t, [0, 0.05], [0, 1])
+          : t > 0.95
+          ? interpolate(t, [0.95, 1], [1, 0])
+          : 1,
     };
   });
 
@@ -93,7 +108,9 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
   const globeAnimatedStyle = useAnimatedStyle(() => {
     return {
       opacity: globeGlow.value,
-      transform: [{ scale: interpolate(globeGlow.value, [0.4, 1], [0.95, 1.05]) }]
+      transform: [
+        {scale: interpolate(globeGlow.value, [0.4, 1], [0.95, 1.05])},
+      ],
     };
   });
 
@@ -126,11 +143,15 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.textContainer}>
         <Text style={styles.title}>{LOADING_TEXTS[textIndex]}</Text>
-        <Text style={styles.subtitle}>Our AI is hand-picking experiences for you</Text>
+        <Text style={styles.subtitle}>
+          Our AI is hand-picking experiences for you
+        </Text>
       </View>
 
       <View style={styles.progressTrack}>
-        <Animated.View style={[styles.progressFill, progressBarAnimatedStyle]} />
+        <Animated.View
+          style={[styles.progressFill, progressBarAnimatedStyle]}
+        />
       </View>
     </View>
   );
@@ -168,7 +189,7 @@ const styles = StyleSheet.create({
     top: SVG_HEIGHT / 2 - 14,
     zIndex: 2,
     shadowColor: '#FF6B4A',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
     shadowOpacity: 0.8,
     shadowRadius: 10,
     elevation: 5,

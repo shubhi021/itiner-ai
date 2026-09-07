@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, Image } from 'react-native';
-import { fp } from '../utils/responsive';
-import { Search, MoreVertical } from 'lucide-react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  FlatList,
+  Image,
+} from 'react-native';
+import {fp} from '../utils/responsive';
+import {Search, MoreVertical} from 'lucide-react-native';
 
 const MOCK_TRIPS = [
   {
@@ -10,7 +18,8 @@ const MOCK_TRIPS = [
     dates: 'Aug 12 - Aug 17, 2024',
     duration: '5 days',
     status: 'UPCOMING',
-    image: 'https://images.unsplash.com/photo-1585286289943-22877a16fb8e?q=80&w=200&auto=format&fit=crop', // Lisbon
+    image:
+      'https://images.unsplash.com/photo-1585286289943-22877a16fb8e?q=80&w=200&auto=format&fit=crop', // Lisbon
   },
   {
     id: '2',
@@ -18,7 +27,8 @@ const MOCK_TRIPS = [
     dates: 'Oct 20 - Oct 27, 2024',
     duration: '7 days',
     status: 'DRAFT',
-    image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=200&auto=format&fit=crop', // Tokyo
+    image:
+      'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=200&auto=format&fit=crop', // Tokyo
   },
   {
     id: '3',
@@ -26,7 +36,8 @@ const MOCK_TRIPS = [
     dates: 'Jun 04 - Jun 08, 2024',
     duration: '4 days',
     status: 'COMPLETED',
-    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=200&auto=format&fit=crop', // Paris grayscale-like
+    image:
+      'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=200&auto=format&fit=crop', // Paris grayscale-like
   },
 ];
 
@@ -60,17 +71,32 @@ export const SavedTripsScreen = () => {
     }
   };
 
-  const renderTripCard = ({ item }: { item: typeof MOCK_TRIPS[0] }) => (
+  const renderTripCard = ({item}: {item: (typeof MOCK_TRIPS)[0]}) => (
     <View style={styles.cardContainer}>
-      <Image source={{ uri: item.image }} style={[styles.cardImage, item.status === 'COMPLETED' && { opacity: 0.5 }]} />
+      <Image
+        source={{uri: item.image}}
+        style={[
+          styles.cardImage,
+          item.status === 'COMPLETED' && {opacity: 0.5},
+        ]}
+      />
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusBgColor(item.status) }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status}</Text>
+          <View
+            style={[
+              styles.statusBadge,
+              {backgroundColor: getStatusBgColor(item.status)},
+            ]}>
+            <Text
+              style={[styles.statusText, {color: getStatusColor(item.status)}]}>
+              {item.status}
+            </Text>
           </View>
           <Text style={styles.durationText}>{item.duration}</Text>
         </View>
-        <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.cardTitle} numberOfLines={1}>
+          {item.title}
+        </Text>
         <Text style={styles.cardDates}>{item.dates}</Text>
       </View>
       <TouchableOpacity style={styles.moreButton}>
@@ -90,13 +116,19 @@ export const SavedTripsScreen = () => {
         </View>
 
         <View style={styles.filtersContainer}>
-          {filters.map((filter) => (
+          {filters.map(filter => (
             <TouchableOpacity
               key={filter}
-              style={[styles.filterChip, activeFilter === filter && styles.filterChipActive]}
-              onPress={() => setActiveFilter(filter)}
-            >
-              <Text style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}>
+              style={[
+                styles.filterChip,
+                activeFilter === filter && styles.filterChipActive,
+              ]}
+              onPress={() => setActiveFilter(filter)}>
+              <Text
+                style={[
+                  styles.filterText,
+                  activeFilter === filter && styles.filterTextActive,
+                ]}>
                 {filter}
               </Text>
             </TouchableOpacity>
@@ -105,7 +137,7 @@ export const SavedTripsScreen = () => {
 
         <FlatList
           data={MOCK_TRIPS}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={renderTripCard}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -145,7 +177,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
@@ -161,7 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 1,
@@ -188,7 +220,7 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,

@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { fp } from '../utils/responsive';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import Svg, { Path, Circle, G, Rect } from 'react-native-svg';
+import React, {useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, Animated, Easing} from 'react-native';
+import {fp} from '../utils/responsive';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import Svg, {Path, Circle, G, Rect} from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
@@ -28,13 +28,25 @@ const CustomRouteIcon = () => (
 
     {/* Start Pin (Bottom Left) */}
     <G x="4.4" y="19.9" transform="scale(0.55)">
-      <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#FFF" stroke={ICON_COLOR} strokeWidth={4.5} strokeLinejoin="round" />
+      <Path
+        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+        fill="#FFF"
+        stroke={ICON_COLOR}
+        strokeWidth={4.5}
+        strokeLinejoin="round"
+      />
       <Circle cx="12" cy="9" r="3.5" fill={ICON_COLOR} />
     </G>
 
     {/* End Pin (Top Right) */}
     <G x="24.4" y="3.9" transform="scale(0.55)">
-      <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#FFF" stroke={ICON_COLOR} strokeWidth={4.5} strokeLinejoin="round" />
+      <Path
+        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+        fill="#FFF"
+        stroke={ICON_COLOR}
+        strokeWidth={4.5}
+        strokeLinejoin="round"
+      />
       <Circle cx="12" cy="9" r="3.5" fill={ICON_COLOR} />
     </G>
   </Svg>
@@ -54,32 +66,54 @@ const PlaneBg = () => (
   <Svg width={180} height={180} viewBox="0 0 180 180">
     <G transform="rotate(-15, 90, 90)">
       {/* Trail underneath */}
-      <Rect x="15" y="115" width="60" height="4" rx="2" fill="rgba(255,255,255,0.06)" />
+      <Rect
+        x="15"
+        y="115"
+        width="60"
+        height="4"
+        rx="2"
+        fill="rgba(255,255,255,0.06)"
+      />
       {/* Body */}
-      <Path d="M 40 90 L 130 90 C 150 90, 160 85, 160 80 C 160 75, 150 70, 130 70 L 40 70 C 25 70, 25 90, 40 90 Z" fill="rgba(255,255,255,0.08)" />
+      <Path
+        d="M 40 90 L 130 90 C 150 90, 160 85, 160 80 C 160 75, 150 70, 130 70 L 40 70 C 25 70, 25 90, 40 90 Z"
+        fill="rgba(255,255,255,0.08)"
+      />
       {/* Bottom Wing */}
-      <Path d="M 80 90 L 40 130 L 65 130 L 110 90 Z" fill="rgba(255,255,255,0.08)" />
+      <Path
+        d="M 80 90 L 40 130 L 65 130 L 110 90 Z"
+        fill="rgba(255,255,255,0.08)"
+      />
       {/* Top Wing */}
-      <Path d="M 90 70 L 65 35 L 85 35 L 115 70 Z" fill="rgba(255,255,255,0.08)" />
+      <Path
+        d="M 90 70 L 65 35 L 85 35 L 115 70 Z"
+        fill="rgba(255,255,255,0.08)"
+      />
       {/* Tail Bottom */}
-      <Path d="M 45 90 L 30 110 L 45 110 L 60 90 Z" fill="rgba(255,255,255,0.08)" />
+      <Path
+        d="M 45 90 L 30 110 L 45 110 L 60 90 Z"
+        fill="rgba(255,255,255,0.08)"
+      />
       {/* Tail Top */}
-      <Path d="M 50 70 L 40 50 L 50 50 L 60 70 Z" fill="rgba(255,255,255,0.08)" />
+      <Path
+        d="M 50 70 L 40 50 L 50 50 L 60 70 Z"
+        fill="rgba(255,255,255,0.08)"
+      />
     </G>
   </Svg>
 );
 
 const MapBg = () => (
   <View style={styles.bgMapContainer}>
-    <View style={[styles.bgMapPanel, { transform: [{ skewY: '-15deg' }] }]} />
-    <View style={[styles.bgMapPanel, { transform: [{ skewY: '15deg' }] }]} />
-    <View style={[styles.bgMapPanel, { transform: [{ skewY: '-15deg' }] }]} />
+    <View style={[styles.bgMapPanel, {transform: [{skewY: '-15deg'}]}]} />
+    <View style={[styles.bgMapPanel, {transform: [{skewY: '15deg'}]}]} />
+    <View style={[styles.bgMapPanel, {transform: [{skewY: '-15deg'}]}]} />
   </View>
 );
 
 // ------------------------------------------------
 
-export const SplashScreen: React.FC<Props> = ({ navigation }) => {
+export const SplashScreen: React.FC<Props> = ({navigation}) => {
   const progressAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -102,9 +136,11 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
     // Automatically navigate after animation finishes
     const timer = setTimeout(async () => {
       try {
-        const hasCompleted = await AsyncStorage.getItem('@has_completed_onboarding');
+        const hasCompleted = await AsyncStorage.getItem(
+          '@has_completed_onboarding',
+        );
         if (hasCompleted === 'true') {
-          navigation.replace('MainTabs', { screen: 'Plan' });
+          navigation.replace('MainTabs', {screen: 'Plan'});
         } else {
           navigation.replace('Onboarding');
         }
@@ -118,17 +154,17 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0%', '100%']
+    outputRange: ['0%', '100%'],
   });
 
   const planeTranslateX = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-40, 120] // move plane to the right
+    outputRange: [-40, 120], // move plane to the right
   });
 
   const planeTranslateY = progressAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [30, -50] // move plane up
+    outputRange: [30, -50], // move plane up
   });
 
   return (
@@ -136,8 +172,12 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
       {/* Background decorations */}
       <View style={styles.bgDecorationContainer}>
         {/* Dashed curved line (Sine wave shape) */}
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
-          <Svg width="100%" height="100%" viewBox="0 0 400 800" preserveAspectRatio="none">
+        <Animated.View style={[StyleSheet.absoluteFill, {opacity: fadeAnim}]}>
+          <Svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 400 800"
+            preserveAspectRatio="none">
             <Path
               d="M -50 350 C 100 250, 250 450, 450 300"
               stroke="rgba(255,255,255,0.12)"
@@ -149,7 +189,7 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
         </Animated.View>
 
         {/* Mountain illustration */}
-        <Animated.View style={[styles.mountainPos, { opacity: fadeAnim }]}>
+        <Animated.View style={[styles.mountainPos, {opacity: fadeAnim}]}>
           <MountainBg />
         </Animated.View>
 
@@ -160,23 +200,22 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
             {
               opacity: fadeAnim,
               transform: [
-                { translateX: planeTranslateX },
-                { translateY: planeTranslateY }
-              ]
-            }
-          ]}
-        >
+                {translateX: planeTranslateX},
+                {translateY: planeTranslateY},
+              ],
+            },
+          ]}>
           <PlaneBg />
         </Animated.View>
 
         {/* Map illustration */}
-        <Animated.View style={[styles.mapPos, { opacity: fadeAnim }]}>
+        <Animated.View style={[styles.mapPos, {opacity: fadeAnim}]}>
           <MapBg />
         </Animated.View>
       </View>
 
       {/* Main Content */}
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+      <Animated.View style={[styles.content, {opacity: fadeAnim}]}>
         <View style={styles.iconContainer}>
           <CustomRouteIcon />
         </View>
@@ -185,9 +224,11 @@ export const SplashScreen: React.FC<Props> = ({ navigation }) => {
       </Animated.View>
 
       {/* Progress Bar & Footer */}
-      <Animated.View style={[styles.bottomContainer, { opacity: fadeAnim }]}>
+      <Animated.View style={[styles.bottomContainer, {opacity: fadeAnim}]}>
         <View style={styles.progressBarTrack}>
-          <Animated.View style={[styles.progressBarFill, { width: progressWidth }]} />
+          <Animated.View
+            style={[styles.progressBarFill, {width: progressWidth}]}
+          />
         </View>
         <Text style={styles.bottomText}>ADVENTURE AWAITS</Text>
       </Animated.View>
@@ -245,7 +286,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: {width: 0, height: 8},
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,

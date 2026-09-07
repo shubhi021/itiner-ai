@@ -1,25 +1,25 @@
-import { fp } from '../utils/responsive';
-import React, { useRef, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  FlatList, 
+import {fp} from '../utils/responsive';
+import React, {useRef, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  FlatList,
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Image
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { ArrowRight } from 'lucide-react-native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {ArrowRight} from 'lucide-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 const SLIDES = [
   {
@@ -39,16 +39,16 @@ const SLIDES = [
     title: 'Edit, save, and take it with you',
     subtitle: 'Adjust any day, save your trip, and export it offline',
     image: require('../assests/images/onb3.png'),
-  }
+  },
 ];
 
-export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
+export const OnboardingScreen: React.FC<Props> = ({navigation}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
   const handleFinish = async () => {
     await AsyncStorage.setItem('@has_completed_onboarding', 'true');
-    navigation.replace('MainTabs', { screen: 'Plan' });
+    navigation.replace('MainTabs', {screen: 'Plan'});
   };
 
   const handleNext = () => {
@@ -69,11 +69,15 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
     setCurrentIndex(newIndex);
   };
 
-  const renderItem = ({ item }: { item: typeof SLIDES[0] }) => {
+  const renderItem = ({item}: {item: (typeof SLIDES)[0]}) => {
     return (
       <View style={styles.slide}>
         <View style={styles.graphicContainer}>
-          <Image source={item.image} style={styles.image} resizeMode="contain" />
+          <Image
+            source={item.image}
+            style={styles.image}
+            resizeMode="contain"
+          />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.title}>{item.title}</Text>
@@ -98,7 +102,7 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
           ref={flatListRef}
           data={SLIDES}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
@@ -115,18 +119,21 @@ export const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
               key={index}
               style={[
                 styles.dot,
-                currentIndex === index ? styles.activeDot : styles.inactiveDot
+                currentIndex === index ? styles.activeDot : styles.inactiveDot,
               ]}
             />
           ))}
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleNext} activeOpacity={0.9}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleNext}
+          activeOpacity={0.9}>
           <Text style={styles.buttonText}>
             {currentIndex === SLIDES.length - 1 ? 'Get started' : 'Next'}
           </Text>
           {currentIndex === SLIDES.length - 1 && (
-            <ArrowRight size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+            <ArrowRight size={20} color="#FFFFFF" style={{marginLeft: 8}} />
           )}
         </TouchableOpacity>
       </View>
@@ -222,7 +229,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#0F4C5C',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,

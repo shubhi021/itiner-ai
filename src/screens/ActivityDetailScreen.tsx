@@ -1,30 +1,54 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
-import { fp } from '../utils/responsive';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { ChevronLeft, Share2, CheckCircle, ThumbsUp, ThumbsDown, X, MapPin } from 'lucide-react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
+import {fp} from '../utils/responsive';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {
+  ChevronLeft,
+  Share2,
+  CheckCircle,
+  ThumbsUp,
+  ThumbsDown,
+  X,
+  MapPin,
+} from 'lucide-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ActivityDetail'>;
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-export const ActivityDetailScreen: React.FC<Props> = ({ navigation }) => {
+export const ActivityDetailScreen: React.FC<Props> = ({navigation}) => {
   const [showAlternatives, setShowAlternatives] = useState(true);
 
   return (
     <View style={styles.container}>
-      <ScrollView bounces={false} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        bounces={false}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
         {/* Header Image */}
         <View style={styles.imageContainer}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=600&auto=format&fit=crop' }} 
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=600&auto=format&fit=crop',
+            }}
             style={styles.headerImage}
           />
           {/* Top Actions */}
           <SafeAreaView style={styles.topActionsSafeArea}>
             <View style={styles.topActions}>
-              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => navigation.goBack()}>
                 <ChevronLeft color="#FFF" size={24} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton}>
@@ -36,7 +60,9 @@ export const ActivityDetailScreen: React.FC<Props> = ({ navigation }) => {
           {/* Floating walk time tag */}
           <View style={styles.floatingTag}>
             <MapPin color="#FF6B4A" size={12} />
-            <Text style={styles.floatingTagText}>18 MIN WALK FROM NAKAMISE STREET</Text>
+            <Text style={styles.floatingTagText}>
+              18 MIN WALK FROM NAKAMISE STREET
+            </Text>
           </View>
         </View>
 
@@ -44,20 +70,23 @@ export const ActivityDetailScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.contentCard}>
           <Text style={styles.dayTimeText}>DAY 1 • 11:30 AM</Text>
           <Text style={styles.title}>Senso-ji Temple</Text>
-          
+
           {/* Tags */}
           <View style={styles.tagsContainer}>
             <View style={styles.tagBase}>
               <Text style={styles.tagBaseText}>HISTORIC SITE</Text>
             </View>
             <View style={styles.tagSaved}>
-              <CheckCircle color="#10B981" size={14} style={{ marginRight: 4 }} />
+              <CheckCircle color="#10B981" size={14} style={{marginRight: 4}} />
               <Text style={styles.tagSavedText}>SAVED TO ITINERARY</Text>
             </View>
           </View>
 
           <Text style={styles.description}>
-            Explore Tokyo's oldest temple, dedicated to the bodhisattva Kannon. Stroll through the historic Nakamise street, lined with traditional snacks and crafts, leading up to the majestic main hall and five-story pagoda.
+            Explore Tokyo's oldest temple, dedicated to the bodhisattva Kannon.
+            Stroll through the historic Nakamise street, lined with traditional
+            snacks and crafts, leading up to the majestic main hall and
+            five-story pagoda.
           </Text>
 
           {/* Info Cards */}
@@ -94,19 +123,23 @@ export const ActivityDetailScreen: React.FC<Props> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
             <View style={styles.mapPlaceholder}>
-               <Image 
-                  source={{ uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop' }} 
-                  style={styles.mapImage} 
-               />
-               <View style={styles.mapPinContainer}>
-                 <MapPin color="#FF6B4A" size={24} fill="#FF6B4A" />
-               </View>
+              <Image
+                source={{
+                  uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop',
+                }}
+                style={styles.mapImage}
+              />
+              <View style={styles.mapPinContainer}>
+                <MapPin color="#FF6B4A" size={24} fill="#FF6B4A" />
+              </View>
             </View>
-            <Text style={styles.address}>2-3-1 Asakusa, Taito City, Tokyo 111-0032, Japan</Text>
+            <Text style={styles.address}>
+              2-3-1 Asakusa, Taito City, Tokyo 111-0032, Japan
+            </Text>
           </View>
-          
+
           {/* Bottom spacing to ensure content is visible above alternatives sheet */}
-          <View style={{ height: showAlternatives ? 280 : 40 }} />
+          <View style={{height: showAlternatives ? 280 : 40}} />
         </View>
       </ScrollView>
 
@@ -116,7 +149,9 @@ export const ActivityDetailScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.altHeader}>
             <View>
               <Text style={styles.altTitle}>Similar alternatives</Text>
-              <Text style={styles.altSubtitle}>Based on your love for history and landmarks</Text>
+              <Text style={styles.altSubtitle}>
+                Based on your love for history and landmarks
+              </Text>
             </View>
             <TouchableOpacity onPress={() => setShowAlternatives(false)}>
               <X color="#9CA3AF" size={24} />
@@ -124,11 +159,18 @@ export const ActivityDetailScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.altCard}>
-            <Image source={{ uri: 'https://images.unsplash.com/photo-1590250992673-c88fbd4ce5f9?q=80&w=150&auto=format&fit=crop' }} style={styles.altCardImage} />
+            <Image
+              source={{
+                uri: 'https://images.unsplash.com/photo-1590250992673-c88fbd4ce5f9?q=80&w=150&auto=format&fit=crop',
+              }}
+              style={styles.altCardImage}
+            />
             <View style={styles.altCardContent}>
               <Text style={styles.altCardTitle}>Asakusa-jinja Shrine</Text>
               <Text style={styles.altCardTime}>10 MIN CLOSER</Text>
-              <Text style={styles.altCardDesc} numberOfLines={2}>Similar historic vibe, much quieter and less crowded.</Text>
+              <Text style={styles.altCardDesc} numberOfLines={2}>
+                Similar historic vibe, much quieter and less crowded.
+              </Text>
             </View>
             <TouchableOpacity style={styles.useButton}>
               <Text style={styles.useButtonText}>USE</Text>
@@ -136,11 +178,18 @@ export const ActivityDetailScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           <View style={styles.altCard}>
-            <Image source={{ uri: 'https://images.unsplash.com/photo-1506159904225-b825db79b882?q=80&w=150&auto=format&fit=crop' }} style={styles.altCardImage} />
+            <Image
+              source={{
+                uri: 'https://images.unsplash.com/photo-1506159904225-b825db79b882?q=80&w=150&auto=format&fit=crop',
+              }}
+              style={styles.altCardImage}
+            />
             <View style={styles.altCardContent}>
               <Text style={styles.altCardTitle}>Sumida Park</Text>
               <Text style={styles.altCardTime}>GREAT VIEW</Text>
-              <Text style={styles.altCardDesc} numberOfLines={2}>Perfect for a river walk after lunch near the temple.</Text>
+              <Text style={styles.altCardDesc} numberOfLines={2}>
+                Perfect for a river walk after lunch near the temple.
+              </Text>
             </View>
             <TouchableOpacity style={styles.useButtonLight}>
               <Text style={styles.useButtonTextLight}>USE</Text>
@@ -365,7 +414,7 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40, // extra padding for bottom safe area
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: {width: 0, height: -4},
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 20,
@@ -397,7 +446,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,

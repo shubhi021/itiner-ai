@@ -3,8 +3,12 @@ export type Activity = {
   name: string;
   description: string;
   location: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   estimatedCost?: string;
-  category?: 'food' | 'landmark' | 'nature' | 'nightlife' | 'shopping' | 'other';
+  category: 'food' | 'landmark' | 'nature' | 'nightlife' | 'shopping' | 'other';
 };
 
 export type ItineraryDay = {

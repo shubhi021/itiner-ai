@@ -1,7 +1,25 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Image, TouchableOpacity, Switch } from 'react-native';
-import { fp } from '../utils/responsive';
-import { Settings, Compass, Wallet, Heart, Bell, Moon, FileOutput, ChevronRight } from 'lucide-react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Switch,
+} from 'react-native';
+import {fp} from '../utils/responsive';
+import {
+  Settings,
+  Compass,
+  Wallet,
+  Heart,
+  Bell,
+  Moon,
+  FileOutput,
+  ChevronRight,
+} from 'lucide-react-native';
 
 export const ProfileScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -9,13 +27,16 @@ export const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
         {/* User Header */}
         <View style={styles.headerCard}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop' }} 
-            style={styles.avatar} 
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop',
+            }}
+            style={styles.avatar}
           />
           <View style={styles.userInfo}>
             <Text style={styles.userName}>Sarah Jenkins</Text>
@@ -53,7 +74,7 @@ export const ProfileScreen = () => {
             <View style={styles.iconCircleRed}>
               <Compass color="#FF6B4A" size={16} />
             </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={{flex: 1, marginLeft: 12}}>
               <Text style={styles.styleCardTitle}>Adventurous</Text>
             </View>
             <View style={styles.levelDots}>
@@ -70,7 +91,7 @@ export const ProfileScreen = () => {
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>TRAVEL PREFERENCES</Text>
           </View>
-          
+
           <TouchableOpacity style={styles.preferenceRow}>
             <View style={styles.iconCircleBlue}>
               <Wallet color="#3B82F6" size={16} />
@@ -79,8 +100,9 @@ export const ProfileScreen = () => {
             <Text style={styles.preferenceValue}>Medium</Text>
             <ChevronRight color="#D1D5DB" size={20} />
           </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.preferenceRow, { borderBottomWidth: 0 }]}>
+
+          <TouchableOpacity
+            style={[styles.preferenceRow, {borderBottomWidth: 0}]}>
             <View style={styles.iconCircleOrange}>
               <Heart color="#F97316" size={16} />
             </View>
@@ -95,28 +117,28 @@ export const ProfileScreen = () => {
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>APP SETTINGS</Text>
           </View>
-          
+
           <View style={styles.preferenceRow}>
             <View style={styles.iconCircleGreen}>
               <Bell color="#10B981" size={16} />
             </View>
             <Text style={styles.preferenceLabel}>Notifications</Text>
             <Switch
-              trackColor={{ false: '#D1D5DB', true: '#FF6B4A' }}
+              trackColor={{false: '#D1D5DB', true: '#FF6B4A'}}
               thumbColor={'#FFFFFF'}
               ios_backgroundColor="#D1D5DB"
               onValueChange={setNotificationsEnabled}
               value={notificationsEnabled}
             />
           </View>
-          
+
           <View style={styles.preferenceRow}>
             <View style={styles.iconCirclePurple}>
               <Moon color="#8B5CF6" size={16} />
             </View>
             <Text style={styles.preferenceLabel}>Dark Mode</Text>
             <Switch
-              trackColor={{ false: '#E5E7EB', true: '#FF6B4A' }}
+              trackColor={{false: '#E5E7EB', true: '#FF6B4A'}}
               thumbColor={'#FFFFFF'}
               ios_backgroundColor="#E5E7EB"
               onValueChange={setDarkModeEnabled}
@@ -124,7 +146,8 @@ export const ProfileScreen = () => {
             />
           </View>
 
-          <TouchableOpacity style={[styles.preferenceRow, { borderBottomWidth: 0 }]}>
+          <TouchableOpacity
+            style={[styles.preferenceRow, {borderBottomWidth: 0}]}>
             <View style={styles.iconCircleDark}>
               <FileOutput color="#4B5563" size={16} />
             </View>
@@ -138,7 +161,6 @@ export const ProfileScreen = () => {
         </TouchableOpacity>
 
         <Text style={styles.versionText}>ITINERAI V1.4.2</Text>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -232,7 +254,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,

@@ -19,15 +19,18 @@ export const InterestChip: React.FC<InterestChipProps> = ({
 }) => {
   return (
     <TouchableOpacity
-      style={[styles.container, selected ? styles.containerSelected : styles.containerUnselected]}
+      style={[
+        styles.container,
+        selected ? styles.containerSelected : styles.containerUnselected,
+      ]}
       onPress={onToggle}
       activeOpacity={0.7}>
-      {icon && (
-        <View style={styles.iconContainer}>
-          {icon}
-        </View>
-      )}
-      <Text style={[styles.text, selected ? styles.textSelected : styles.textUnselected]}>
+      {icon && <View style={styles.iconContainer}>{icon}</View>}
+      <Text
+        style={[
+          styles.text,
+          selected ? styles.textSelected : styles.textUnselected,
+        ]}>
         {label}
       </Text>
     </TouchableOpacity>

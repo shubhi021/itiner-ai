@@ -1,21 +1,39 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ImageBackground, Image } from 'react-native';
-import { fp } from '../utils/responsive';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { ChevronLeft, Share2, Edit3, MapPin, Utensils, Landmark } from 'lucide-react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+  ImageBackground,
+  Image,
+} from 'react-native';
+import {fp} from '../utils/responsive';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {
+  ChevronLeft,
+  Share2,
+  Edit3,
+  MapPin,
+  Utensils,
+  Landmark,
+} from 'lucide-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ItineraryDetail'>;
 
 const MOCK_ITINERARY = {
   title: 'Lisbon City Break',
   subtitle: 'Aug 12 - Aug 17, 2024 • Portugal',
-  heroImage: 'https://images.unsplash.com/photo-1585286289943-22877a16fb8e?q=80&w=600&auto=format&fit=crop', // Lisbon
-  mapImage: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop', // Map placeholder
+  heroImage:
+    'https://images.unsplash.com/photo-1585286289943-22877a16fb8e?q=80&w=600&auto=format&fit=crop', // Lisbon
+  mapImage:
+    'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop', // Map placeholder
   stats: [
-    { label: 'DAYS', value: '5 Days' },
-    { label: 'BUDGET', value: '€750' },
-    { label: 'ACTIVITIES', value: '12 Stops' },
+    {label: 'DAYS', value: '5 Days'},
+    {label: 'BUDGET', value: '€750'},
+    {label: 'ACTIVITIES', value: '12 Stops'},
   ],
   days: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
   activities: [
@@ -24,7 +42,8 @@ const MOCK_ITINERARY = {
       type: 'food',
       name: 'Pasteis de Belém',
       time: '09:30 AM',
-      description: 'Historic bakery famous for original custard tarts. Essential Lisbon experience.',
+      description:
+        'Historic bakery famous for original custard tarts. Essential Lisbon experience.',
       cost: 'Est. €10-15',
     },
     {
@@ -32,13 +51,14 @@ const MOCK_ITINERARY = {
       type: 'landmark',
       name: 'Jerónimos Monastery',
       time: '11:00 AM',
-      description: 'UNESCO World Heritage site showcasing Manueline architecture.',
+      description:
+        'UNESCO World Heritage site showcasing Manueline architecture.',
       cost: 'Est. €12',
-    }
-  ]
+    },
+  ],
 };
 
-export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
+export const ItineraryDetailScreen: React.FC<Props> = ({navigation}) => {
   const [activeDay, setActiveDay] = useState('Day 1');
 
   const renderActivityIcon = (type: string) => {
@@ -65,24 +85,35 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
         {/* Draft Banner */}
         <SafeAreaView style={styles.draftBannerWrapper}>
           <View style={styles.draftBanner}>
-            <Text style={styles.draftText}>This trip was auto-saved as a draft</Text>
+            <Text style={styles.draftText}>
+              This trip was auto-saved as a draft
+            </Text>
             <View style={styles.draftActions}>
-              <TouchableOpacity><Text style={styles.keepText}>KEEP</Text></TouchableOpacity>
-              <TouchableOpacity><Text style={styles.discardText}>DISCARD</Text></TouchableOpacity>
+              <TouchableOpacity>
+                <Text style={styles.keepText}>KEEP</Text>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Text style={styles.discardText}>DISCARD</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </SafeAreaView>
 
         {/* Hero Section */}
-        <ImageBackground source={{ uri: MOCK_ITINERARY.heroImage }} style={styles.heroImage}>
+        <ImageBackground
+          source={{uri: MOCK_ITINERARY.heroImage}}
+          style={styles.heroImage}>
           <SafeAreaView style={styles.heroSafeArea}>
             <View style={styles.header}>
-              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => navigation.goBack()}>
                 <ChevronLeft size={24} color="#FFF" />
               </TouchableOpacity>
               <View style={styles.headerRight}>
@@ -115,22 +146,34 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Map Preview */}
           <View style={styles.mapContainer}>
-             <Image source={{ uri: MOCK_ITINERARY.mapImage }} style={styles.mapImage} />
-             {/* Map overlay content would go here, simulating pins */}
-             <TouchableOpacity style={styles.mapButton}>
-               <Text style={styles.mapButtonText}>View full map</Text>
-             </TouchableOpacity>
+            <Image
+              source={{uri: MOCK_ITINERARY.mapImage}}
+              style={styles.mapImage}
+            />
+            {/* Map overlay content would go here, simulating pins */}
+            <TouchableOpacity style={styles.mapButton}>
+              <Text style={styles.mapButtonText}>View full map</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Days Tabs */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer}>
-            {MOCK_ITINERARY.days.map((day) => (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.tabsContainer}>
+            {MOCK_ITINERARY.days.map(day => (
               <TouchableOpacity
                 key={day}
-                style={[styles.tabButton, activeDay === day && styles.tabButtonActive]}
-                onPress={() => setActiveDay(day)}
-              >
-                <Text style={[styles.tabText, activeDay === day && styles.tabTextActive]}>
+                style={[
+                  styles.tabButton,
+                  activeDay === day && styles.tabButtonActive,
+                ]}
+                onPress={() => setActiveDay(day)}>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeDay === day && styles.tabTextActive,
+                  ]}>
                   {day}
                 </Text>
               </TouchableOpacity>
@@ -139,10 +182,14 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Activities List */}
           <View style={styles.activitiesContainer}>
-            {MOCK_ITINERARY.activities.map((activity) => (
+            {MOCK_ITINERARY.activities.map(activity => (
               <View key={activity.id} style={styles.activityCard}>
                 <View style={styles.activityHeader}>
-                  <View style={[styles.activityIconContainer, { backgroundColor: getIconBgColor(activity.type) }]}>
+                  <View
+                    style={[
+                      styles.activityIconContainer,
+                      {backgroundColor: getIconBgColor(activity.type)},
+                    ]}>
                     {renderActivityIcon(activity.type)}
                   </View>
                   <View style={styles.activityTitleRow}>
@@ -150,7 +197,9 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                     <Text style={styles.activityTime}>{activity.time}</Text>
                   </View>
                 </View>
-                <Text style={styles.activityDescription}>{activity.description}</Text>
+                <Text style={styles.activityDescription}>
+                  {activity.description}
+                </Text>
                 <Text style={styles.activityCost}>{activity.cost}</Text>
               </View>
             ))}
@@ -280,7 +329,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
@@ -318,7 +367,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
@@ -357,7 +406,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,

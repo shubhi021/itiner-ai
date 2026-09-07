@@ -1,22 +1,41 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { fp } from '../utils/responsive';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { Check, Plane, Calendar, Wallet, Search, ArrowRight } from 'lucide-react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
+import {fp} from '../utils/responsive';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {
+  Check,
+  Plane,
+  Calendar,
+  Wallet,
+  Search,
+  ArrowRight,
+} from 'lucide-react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TripSummary'>;
 
-export const TripSummaryScreen: React.FC<Props> = ({ navigation }) => {
+export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} bounces={false} showsVerticalScrollIndicator={false}>
-        
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        bounces={false}
+        showsVerticalScrollIndicator={false}>
         {/* Top Header Image */}
         <View style={styles.headerImageContainer}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=600&auto=format&fit=crop' }} 
-            style={styles.headerImage} 
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=600&auto=format&fit=crop',
+            }}
+            style={styles.headerImage}
           />
           <View style={styles.overlay}>
             <View style={styles.checkCircle}>
@@ -28,15 +47,18 @@ export const TripSummaryScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Content Card */}
         <View style={styles.cardContainer}>
-          
           {/* Title Row */}
           <View style={styles.titleRow}>
-            <View style={{ flex: 1 }}>
+            <View style={{flex: 1}}>
               <Text style={styles.title}>Tokyo Explorer</Text>
               <Text style={styles.subtitle}>5 Days • Medium Budget</Text>
             </View>
             <View style={styles.planeCircle}>
-              <Plane color="#FF6B4A" size={20} style={{ transform: [{ rotate: '45deg' }] }} />
+              <Plane
+                color="#FF6B4A"
+                size={20}
+                style={{transform: [{rotate: '45deg'}]}}
+              />
             </View>
           </View>
 
@@ -66,17 +88,19 @@ export const TripSummaryScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.mapSection}>
             <Text style={styles.mapSectionTitle}>Trip Overview</Text>
             <View style={styles.mapContainer}>
-              <Image 
-                source={{ uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop' }} 
+              <Image
+                source={{
+                  uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop',
+                }}
                 style={styles.mapImage}
               />
               {/* Fake pins to make it look like a map */}
-              <View style={[styles.fakePin, { top: '30%', left: '40%' }]} />
-              <View style={[styles.fakePinBlue, { top: '50%', left: '60%' }]} />
-              <View style={[styles.fakePinOrange, { top: '40%', left: '70%' }]} />
-              <View style={[styles.fakePin, { top: '60%', left: '30%' }]} />
-              <View style={[styles.fakePinOrange, { top: '20%', left: '50%' }]} />
-              <View style={[styles.fakePinBlue, { top: '70%', left: '55%' }]} />
+              <View style={[styles.fakePin, {top: '30%', left: '40%'}]} />
+              <View style={[styles.fakePinBlue, {top: '50%', left: '60%'}]} />
+              <View style={[styles.fakePinOrange, {top: '40%', left: '70%'}]} />
+              <View style={[styles.fakePin, {top: '60%', left: '30%'}]} />
+              <View style={[styles.fakePinOrange, {top: '20%', left: '50%'}]} />
+              <View style={[styles.fakePinBlue, {top: '70%', left: '55%'}]} />
 
               <TouchableOpacity style={styles.expandMapBtn}>
                 <Search color="#0F4C5C" size={16} />
@@ -87,19 +111,19 @@ export const TripSummaryScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Bottom Actions */}
           <View style={styles.bottomActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => navigation.navigate('ItineraryDetail')}
-            >
+              onPress={() => navigation.navigate('ItineraryDetail')}>
               <Text style={styles.primaryButtonText}>View full itinerary</Text>
-              <ArrowRight color="#FFFFFF" size={18} style={{ marginLeft: 8 }} />
+              <ArrowRight color="#FFFFFF" size={18} style={{marginLeft: 8}} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.discardButton} onPress={() => navigation.navigate('MainTabs', { screen: 'Plan' })}>
+            <TouchableOpacity
+              style={styles.discardButton}
+              onPress={() => navigation.navigate('MainTabs', {screen: 'Plan'})}>
               <Text style={styles.discardText}>Discard and start over</Text>
             </TouchableOpacity>
           </View>
-
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -153,7 +177,7 @@ const styles = StyleSheet.create({
     padding: 24,
     minHeight: 500,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: {width: 0, height: -4},
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 20,
@@ -271,7 +295,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 8,
@@ -294,7 +318,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#0F4C5C',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,

@@ -1,9 +1,11 @@
-import { configureStore } from '@reduxjs/toolkit';
+import {configureStore} from '@reduxjs/toolkit';
 import tripReducer from './tripSlice';
+import itineraryReducer from './itinerarySlice';
 
 export const store = configureStore({
   reducer: {
     trip: tripReducer,
+    itinerary: itineraryReducer,
   },
 });
 

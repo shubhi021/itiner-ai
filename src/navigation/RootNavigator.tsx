@@ -25,29 +25,29 @@ const MainTabs = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: '#FFFFFF' },
+        tabBarStyle: {backgroundColor: '#FFFFFF'},
         tabBarActiveTintColor: '#FF6B4A',
         tabBarInactiveTintColor: '#6B7280',
       }}>
-      <Tab.Screen 
-        name="Plan" 
-        component={TripFormScreen} 
+      <Tab.Screen
+        name="Plan"
+        component={TripFormScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <Map color={color} size={size} />
+          tabBarIcon: ({color, size}) => <Map color={color} size={size} />,
         }}
       />
-      <Tab.Screen 
-        name="Trips" 
-        component={SavedTripsScreen} 
+      <Tab.Screen
+        name="Trips"
+        component={SavedTripsScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size} />
+          tabBarIcon: ({color, size}) => <Bookmark color={color} size={size} />,
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />
+          tabBarIcon: ({color, size}) => <User color={color} size={size} />,
         }}
       />
     </Tab.Navigator>

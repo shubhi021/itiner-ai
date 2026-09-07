@@ -1,5 +1,5 @@
-import { fp } from '../utils/responsive';
-import React, { useState } from 'react';
+import {fp} from '../utils/responsive';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -12,20 +12,20 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootStackParamList, MainTabParamList } from '../navigation/types';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {CompositeScreenProps} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import {RootStackParamList, MainTabParamList} from '../navigation/types';
 import {
   setDestination as setReduxDestination,
   setDays as setReduxDays,
   setBudget as setReduxBudget,
   toggleInterest as toggleReduxInterest,
-  selectIsFormValid
+  selectIsFormValid,
 } from '../store/tripSlice';
-import { BudgetSelector } from '../components/BudgetSelector';
-import { InterestChip } from '../components/InterestChip';
+import {BudgetSelector} from '../components/BudgetSelector';
+import {InterestChip} from '../components/InterestChip';
 import {
   MapPin,
   Palmtree,
@@ -43,7 +43,7 @@ import {
   ChevronRight,
   SlidersHorizontal,
 } from 'lucide-react-native';
-import { RootState } from '../store';
+import {RootState} from '../store';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Plan'>,
@@ -62,34 +62,73 @@ const COLORS = {
 };
 
 const MOODS = [
-  { id: 'beach', label: 'Beach', icon: Palmtree, bgColor: '#E8F2FF', iconColor: '#0066FF' },
-  { id: 'city', label: 'City', icon: Building2, bgColor: '#FFEEE8', iconColor: '#FF6B4A' },
-  { id: 'nature', label: 'Nature', icon: TreePine, bgColor: '#E8F5E9', iconColor: '#2E7D32' },
-  { id: 'adventure', label: 'Adventure', icon: Compass, bgColor: '#F4E8FF', iconColor: '#7B1FA2' }
+  {
+    id: 'beach',
+    label: 'Beach',
+    icon: Palmtree,
+    bgColor: '#E8F2FF',
+    iconColor: '#0066FF',
+  },
+  {
+    id: 'city',
+    label: 'City',
+    icon: Building2,
+    bgColor: '#FFEEE8',
+    iconColor: '#FF6B4A',
+  },
+  {
+    id: 'nature',
+    label: 'Nature',
+    icon: TreePine,
+    bgColor: '#E8F5E9',
+    iconColor: '#2E7D32',
+  },
+  {
+    id: 'adventure',
+    label: 'Adventure',
+    icon: Compass,
+    bgColor: '#F4E8FF',
+    iconColor: '#7B1FA2',
+  },
 ];
 
 const TRENDING = [
-  { id: '1', city: 'Lisbon, Portugal', subtext: '12 travelers planning now', badge: 'POPULAR', image: 'https://images.unsplash.com/photo-1585244585141-8889417d4722?q=80&w=400&auto=format&fit=crop' },
-  { id: '2', city: 'Ubud, Indonesia', subtext: 'Trending this week', image: 'https://images.unsplash.com/photo-1559628233-eb1b1a45564b?q=80&w=400&auto=format&fit=crop' },
-  { id: '3', city: 'Positano, Italy', subtext: 'Hot summer choice', image: 'https://images.unsplash.com/photo-1533682805518-48d1f5b8cb3a?q=80&w=400&auto=format&fit=crop' }
+  {
+    id: '1',
+    city: 'Lisbon, Portugal',
+    subtext: '12 travelers planning now',
+    badge: 'POPULAR',
+    image:
+      'https://images.unsplash.com/photo-1585244585141-8889417d4722?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: '2',
+    city: 'Ubud, Indonesia',
+    subtext: 'Trending this week',
+    image:
+      'https://images.unsplash.com/photo-1559628233-eb1b1a45564b?q=80&w=400&auto=format&fit=crop',
+  },
+  {
+    id: '3',
+    city: 'Positano, Italy',
+    subtext: 'Hot summer choice',
+    image:
+      'https://images.unsplash.com/photo-1533682805518-48d1f5b8cb3a?q=80&w=400&auto=format&fit=crop',
+  },
 ];
 
 const INTERESTS = [
-  { id: 'Food', label: 'Food', icon: Utensils },
-  { id: 'History', label: 'History', icon: Landmark },
-  { id: 'Nightlife', label: 'Nightlife', icon: Moon },
-  { id: 'Art', label: 'Art', icon: Palette },
-  { id: 'Nature', label: 'Nature', icon: TreePine },
-  { id: 'Shopping', label: 'Shopping', icon: ShoppingBag },
+  {id: 'Food', label: 'Food', icon: Utensils},
+  {id: 'History', label: 'History', icon: Landmark},
+  {id: 'Nightlife', label: 'Nightlife', icon: Moon},
+  {id: 'Art', label: 'Art', icon: Palette},
+  {id: 'Nature', label: 'Nature', icon: TreePine},
+  {id: 'Shopping', label: 'Shopping', icon: ShoppingBag},
 ];
 
-const SUGGESTIONS = [
-  'Lisbon, Portugal',
-  'Porto, Portugal',
-  'Sintra, Portugal'
-];
+const SUGGESTIONS = ['Lisbon, Portugal', 'Porto, Portugal', 'Sintra, Portugal'];
 
-export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
+export const TripFormScreen: React.FC<Props> = ({navigation}) => {
   const dispatch = useDispatch();
 
   const destination = useSelector((state: RootState) => state.trip.destination);
@@ -131,24 +170,35 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const filteredSuggestions = SUGGESTIONS.filter(s =>
-    s.toLowerCase().includes(searchInput.toLowerCase())
+    s.toLowerCase().includes(searchInput.toLowerCase()),
   );
 
   const getBudgetEstimate = () => {
     switch (budget) {
-      case 'low': return 'EST. €40-80 / DAY';
-      case 'high': return 'EST. €150-300+ / DAY';
+      case 'low':
+        return 'EST. €40-80 / DAY';
+      case 'high':
+        return 'EST. €150-300+ / DAY';
       case 'medium':
-      default: return 'EST. €80-150 / DAY';
+      default:
+        return 'EST. €80-150 / DAY';
     }
   };
 
   const calculateProgress = () => {
     let progress = 0;
-    if (mood) progress++; // Step 1: Mood
-    if (isDestinationSelected) progress++; // Step 2: Destination
-    if (days && budget) progress++; // Step 3: Logistics
-    if (interests.length > 0) progress++; // Step 4: Interests
+    if (mood) {
+      progress++;
+    } // Step 1: Mood
+    if (isDestinationSelected) {
+      progress++;
+    } // Step 2: Destination
+    if (days && budget) {
+      progress++;
+    } // Step 3: Logistics
+    if (interests.length > 0) {
+      progress++;
+    } // Step 4: Interests
     return Math.min(4, progress);
   };
 
@@ -159,19 +209,20 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
       <KeyboardAvoidingView
         style={styles.flex1}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={styles.flex1} contentContainerStyle={styles.scrollContent}>
-
+        <ScrollView
+          style={styles.flex1}
+          contentContainerStyle={styles.scrollContent}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.greetingRow}>
               <Text style={styles.greeting}>Hi Sarah 👋</Text>
               <View style={styles.progressContainer}>
-                {[1, 2, 3, 4].map((step) => (
+                {[1, 2, 3, 4].map(step => (
                   <View
                     key={step}
                     style={[
                       styles.progressBar,
-                      step <= progress && styles.progressActive
+                      step <= progress && styles.progressActive,
                     ]}
                   />
                 ))}
@@ -182,8 +233,12 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
             {isDestinationSelected && (
               <View style={styles.selectedDestinationPill}>
                 <MapPin color={COLORS.coral} size={14} />
-                <Text style={styles.selectedDestinationText}>{destination}</Text>
-                <TouchableOpacity style={styles.removeDestinationBtn} onPress={clearDestination}>
+                <Text style={styles.selectedDestinationText}>
+                  {destination}
+                </Text>
+                <TouchableOpacity
+                  style={styles.removeDestinationBtn}
+                  onPress={clearDestination}>
                   <X color="#9CA3AF" size={14} />
                 </TouchableOpacity>
               </View>
@@ -192,7 +247,10 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Mood Tiles */}
           <View style={styles.section}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.moodScroll}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.moodScroll}>
               {MOODS.map(m => {
                 const Icon = m.icon;
                 const isSelected = mood === m.id;
@@ -201,13 +259,16 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
                     key={m.id}
                     style={[
                       styles.moodTile,
-                      { backgroundColor: m.bgColor },
-                      isSelected && styles.moodTileSelected
+                      {backgroundColor: m.bgColor},
+                      isSelected && styles.moodTileSelected,
                     ]}
                     onPress={() => setMood(m.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Icon color={m.iconColor} size={28} style={{ marginBottom: 8 }} />
+                    activeOpacity={0.8}>
+                    <Icon
+                      color={m.iconColor}
+                      size={28}
+                      style={{marginBottom: 8}}
+                    />
                     <Text style={styles.moodLabel}>{m.label}</Text>
                   </TouchableOpacity>
                 );
@@ -218,16 +279,21 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
           {/* Trending Destinations */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>TRENDING DESTINATIONS</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingScroll}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.trendingScroll}>
               {TRENDING.map(t => (
                 <TouchableOpacity
                   key={t.id}
                   style={styles.trendingCard}
                   activeOpacity={0.9}
-                  onPress={() => handleSelectSuggestion(t.city)}
-                >
+                  onPress={() => handleSelectSuggestion(t.city)}>
                   <View style={styles.imageContainer}>
-                    <Image source={{ uri: t.image }} style={styles.trendingImage} />
+                    <Image
+                      source={{uri: t.image}}
+                      style={styles.trendingImage}
+                    />
                     {t.badge && (
                       <View style={styles.badgeContainer}>
                         <Text style={styles.badgeText}>{t.badge}</Text>
@@ -245,17 +311,23 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Destination Input */}
           {!isDestinationSelected && (
-            <View style={[styles.section, { zIndex: 10 }]}>
+            <View style={[styles.section, {zIndex: 10}]}>
               <Text style={styles.label}>Destination</Text>
               <View style={styles.inputContainer}>
-                <MapPin color={COLORS.gray} size={20} style={styles.inputIcon} />
+                <MapPin
+                  color={COLORS.gray}
+                  size={20}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={styles.input}
                   placeholder="Where do you want to go?"
                   placeholderTextColor="#9CA3AF"
                   value={searchInput}
                   onChangeText={handleDestinationChange}
-                  onFocus={() => searchInput.length > 0 && setShowDropdown(true)}
+                  onFocus={() =>
+                    searchInput.length > 0 && setShowDropdown(true)
+                  }
                 />
               </View>
 
@@ -264,12 +336,30 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
                   {filteredSuggestions.map((s, idx) => (
                     <TouchableOpacity
                       key={s}
-                      style={[styles.dropdownItem, idx !== filteredSuggestions.length - 1 && styles.dropdownBorder]}
-                      onPress={() => handleSelectSuggestion(s)}
-                    >
-                      <MapPin color={idx === 0 ? COLORS.coral : '#9CA3AF'} size={16} />
-                      <Text style={[styles.dropdownText, idx === 0 && styles.dropdownTextActive]}>{s}</Text>
-                      {idx === 0 && <ChevronRight color="#D1D5DB" size={16} style={{ marginLeft: 'auto' }} />}
+                      style={[
+                        styles.dropdownItem,
+                        idx !== filteredSuggestions.length - 1 &&
+                          styles.dropdownBorder,
+                      ]}
+                      onPress={() => handleSelectSuggestion(s)}>
+                      <MapPin
+                        color={idx === 0 ? COLORS.coral : '#9CA3AF'}
+                        size={16}
+                      />
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          idx === 0 && styles.dropdownTextActive,
+                        ]}>
+                        {s}
+                      </Text>
+                      {idx === 0 && (
+                        <ChevronRight
+                          color="#D1D5DB"
+                          size={16}
+                          style={{marginLeft: 'auto'}}
+                        />
+                      )}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -301,7 +391,10 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
           {/* Budget */}
           <View style={styles.section}>
             <Text style={styles.label}>Budget</Text>
-            <BudgetSelector selectedBudget={budget} onSelect={(val) => dispatch(setReduxBudget(val))} />
+            <BudgetSelector
+              selectedBudget={budget}
+              onSelect={val => dispatch(setReduxBudget(val))}
+            />
             <View style={styles.budgetEstimateContainer}>
               <Text style={styles.budgetEstimate}>{getBudgetEstimate()}</Text>
             </View>
@@ -313,7 +406,9 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.interestsTitleRow}>
                 <Text style={styles.label}>Interests</Text>
                 <View style={styles.interestCountBadge}>
-                  <Text style={styles.interestCountText}>{interests.length}/5 selected</Text>
+                  <Text style={styles.interestCountText}>
+                    {interests.length}/5 selected
+                  </Text>
                 </View>
               </View>
               <Text style={styles.interestsLimit}>SELECT UP TO 5</Text>
@@ -328,7 +423,9 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
                     label={interest.label}
                     selected={isSelected}
                     onToggle={() => handleToggleInterest(interest.id)}
-                    icon={<Icon color={isSelected ? '#FFF' : '#9CA3AF'} size={16} />}
+                    icon={
+                      <Icon color={isSelected ? '#FFF' : '#9CA3AF'} size={16} />
+                    }
                   />
                 );
               })}
@@ -346,22 +443,28 @@ export const TripFormScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Footer branding */}
           <View style={styles.footerBranding}>
-            <Text style={styles.footerBrandingText}>POWERED BY AI • PERSONALIZED IN SECONDS</Text>
+            <Text style={styles.footerBrandingText}>
+              POWERED BY AI • PERSONALIZED IN SECONDS
+            </Text>
           </View>
 
           {/* Spacer for fixed button */}
-          <View style={{ height: 80 }} />
+          <View style={{height: 80}} />
         </ScrollView>
 
         {/* Fixed Submit Button */}
         <View style={styles.fixedFooter}>
           <TouchableOpacity
-            style={[styles.submitButton, !isFormValid && { opacity: 0.6 }]}
+            style={[styles.submitButton, !isFormValid && {opacity: 0.6}]}
             onPress={handleSubmit}
             disabled={!isFormValid}
             activeOpacity={0.9}>
             <Text style={styles.submitButtonText}>Generate Itinerary</Text>
-            <ArrowRight color={COLORS.white} size={20} style={{ marginLeft: 8 }} />
+            <ArrowRight
+              color={COLORS.white}
+              size={20}
+              style={{marginLeft: 8}}
+            />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -438,7 +541,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 3,
@@ -497,7 +600,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.lightGray,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 5,
@@ -603,7 +706,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: COLORS.coral,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
@@ -643,7 +746,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -740,4 +843,3 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
 });
-
