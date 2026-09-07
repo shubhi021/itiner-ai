@@ -20,6 +20,9 @@ import {
   Utensils,
   Landmark,
 } from 'lucide-react-native';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { MapRoute } from '../components/MapRoute';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ItineraryDetail'>;
 
@@ -45,6 +48,7 @@ const MOCK_ITINERARY = {
       description:
         'Historic bakery famous for original custard tarts. Essential Lisbon experience.',
       cost: 'Est. €10-15',
+      coordinates: { latitude: 38.6975, longitude: -9.2032 } // Belem Tower area
     },
     {
       id: '2',
@@ -54,12 +58,32 @@ const MOCK_ITINERARY = {
       description:
         'UNESCO World Heritage site showcasing Manueline architecture.',
       cost: 'Est. €12',
+      coordinates: { latitude: 38.6979, longitude: -9.2066 } // Monastery
     },
   ],
 };
 
 export const ItineraryDetailScreen: React.FC<Props> = ({navigation}) => {
-  const [activeDay, setActiveDay] = useState('Day 1');
+  const { currentItinerary } = useSelector((state: RootState) => state.itinerary);
+  const { budget } = useSelector((state: RootState) => state.trip);
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
+
+  // If there's no itinerary in state, use the mock data as fallback for now
+  const displayItinerary = currentItinerary || MOCK_ITINERARY as any;
+  
+  // Handle differences between mock and real data structures
+  const isMock = !currentItinerary;
+  const title = isMock ? MOCK_ITINERARY.title : `${displayItinerary.destination} Trip`;
+  const subtitle = isMock ? MOCK_ITINERARY.subtitle : `${displayItinerary.days.length} Days • ${budget.toUpperCase()} Budget`;
+  const daysArray = isMock ? MOCK_ITINERARY.days : displayItinerary.days.map((d: any) => `Day ${d.day}`);
+  
+  // Safe activities fetching
+  let currentDayActivities: any[] = [];
+  if (isMock) {
+    currentDayActivities = MOCK_ITINERARY.activities;
+  } else if (displayItinerary.days[activeDayIndex]) {
+    currentDayActivities = displayItinerary.days[activeDayIndex].activities;
+  }
 
   const renderActivityIcon = (type: string) => {
     switch (type) {
@@ -126,8 +150,8 @@ export const ItineraryDetailScreen: React.FC<Props> = ({navigation}) => {
               </View>
             </View>
             <View style={styles.heroContent}>
-              <Text style={styles.heroTitle}>{MOCK_ITINERARY.title}</Text>
-              <Text style={styles.heroSubtitle}>{MOCK_ITINERARY.subtitle}</Text>
+              <Text style={styles.heroTitle}>{title}</Text>
+              <Text style={styles.heroSubtitle}>{subtitle}</Text>
             </View>
           </SafeAreaView>
         </ImageBackground>
@@ -146,11 +170,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({navigation}) => {
 
           {/* Map Preview */}
           <View style={styles.mapContainer}>
-            <Image
-              source={{uri: MOCK_ITINERARY.mapImage}}
-              style={styles.mapImage}
-            />
-            {/* Map overlay content would go here, simulating pins */}
+            <MapRoute activities={currentDayActivities} />
             <TouchableOpacity style={styles.mapButton}>
               <Text style={styles.mapButtonText}>View full map</Text>
             </TouchableOpacity>
@@ -161,20 +181,20 @@ export const ItineraryDetailScreen: React.FC<Props> = ({navigation}) => {
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.tabsContainer}>
-            {MOCK_ITINERARY.days.map(day => (
+            {daysArray.map((dayLabel: string, index: number) => (
               <TouchableOpacity
-                key={day}
+                key={index}
                 style={[
                   styles.tabButton,
-                  activeDay === day && styles.tabButtonActive,
+                  activeDayIndex === index && styles.tabButtonActive,
                 ]}
-                onPress={() => setActiveDay(day)}>
+                onPress={() => setActiveDayIndex(index)}>
                 <Text
                   style={[
                     styles.tabText,
-                    activeDay === day && styles.tabTextActive,
+                    activeDayIndex === index && styles.tabTextActive,
                   ]}>
-                  {day}
+                  {dayLabel}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -182,8 +202,8 @@ export const ItineraryDetailScreen: React.FC<Props> = ({navigation}) => {
 
           {/* Activities List */}
           <View style={styles.activitiesContainer}>
-            {MOCK_ITINERARY.activities.map(activity => (
-              <View key={activity.id} style={styles.activityCard}>
+            {currentDayActivities.map((activity, index) => (
+              <View key={`${activity.name}-${index}`} style={styles.activityCard}>
                 <View style={styles.activityHeader}>
                   <View
                     style={[
@@ -200,7 +220,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({navigation}) => {
                 <Text style={styles.activityDescription}>
                   {activity.description}
                 </Text>
-                <Text style={styles.activityCost}>{activity.cost}</Text>
+                <Text style={styles.activityCost}>{activity.estimatedCost || activity.cost || 'Cost varies'}</Text>
               </View>
             ))}
           </View>

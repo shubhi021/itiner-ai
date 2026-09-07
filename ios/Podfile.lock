@@ -948,6 +948,12 @@ PODS:
   - React-Mapbuffer (0.73.6):
     - glog
     - React-debug
+  - react-native-blur (4.4.1):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
+  - react-native-maps (1.14.0):
+    - React-Core
   - react-native-safe-area-context (5.9.1):
     - React-Core
   - React-nativeconfig (0.73.6)
@@ -1190,6 +1196,8 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector-modern`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
+  - "react-native-blur (from `../node_modules/@react-native-community/blur`)"
+  - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -1291,6 +1299,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/logger"
   React-Mapbuffer:
     :path: "../node_modules/react-native/ReactCommon"
+  react-native-blur:
+    :path: "../node_modules/@react-native-community/blur"
+  react-native-maps:
+    :path: "../node_modules/react-native-maps"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   React-nativeconfig:
@@ -1385,6 +1397,8 @@ SPEC CHECKSUMS:
   React-jsinspector: 85583ef014ce53d731a98c66a0e24496f7a83066
   React-logger: 3eb80a977f0d9669468ef641a5e1fabbc50a09ec
   React-Mapbuffer: 84ea43c6c6232049135b1550b8c60b2faac19fab
+  react-native-blur: b2b140d3d65077a1d5d26be62d9415f895592344
+  react-native-maps: cbf2f03bfeebfd7ec45966b066db13a075fd2af3
   react-native-safe-area-context: 88321784469a79bf0e3c8d98dcf355e29744ea71
   React-nativeconfig: b4d4e9901d4cabb57be63053fd2aa6086eb3c85f
   React-NativeModulesApple: cd26e56d56350e123da0c1e3e4c76cb58a05e1ee

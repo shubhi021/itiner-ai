@@ -1,40 +1,39 @@
-import {GoogleGenerativeAI, Schema, Type} from '@google/generative-ai';
-import {GEMINI_API_KEY} from '@env';
-import {TripRequest, Itinerary} from '../types/trip';
+import { GoogleGenerativeAI, Schema, SchemaType } from '@google/generative-ai';
+import { GEMINI_API_KEY } from '@env';
+import { TripRequest, Itinerary } from '../types/trip';
 
-// Initialize the Gemini API client
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+let genAI: GoogleGenerativeAI | null = null;
 
 // Define the JSON schema we want Gemini to return
 const itinerarySchema: Schema = {
-  type: Type.OBJECT,
+  type: SchemaType.OBJECT,
   properties: {
-    destination: {type: Type.STRING},
+    destination: { type: SchemaType.STRING },
     days: {
-      type: Type.ARRAY,
+      type: SchemaType.ARRAY,
       items: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          day: {type: Type.INTEGER},
+          day: { type: SchemaType.INTEGER },
           activities: {
-            type: Type.ARRAY,
+            type: SchemaType.ARRAY,
             items: {
-              type: Type.OBJECT,
+              type: SchemaType.OBJECT,
               properties: {
-                time: {type: Type.STRING},
-                name: {type: Type.STRING},
-                description: {type: Type.STRING},
-                location: {type: Type.STRING},
+                time: { type: SchemaType.STRING },
+                name: { type: SchemaType.STRING },
+                description: { type: SchemaType.STRING },
+                location: { type: SchemaType.STRING },
                 coordinates: {
-                  type: Type.OBJECT,
+                  type: SchemaType.OBJECT,
                   properties: {
-                    latitude: {type: Type.NUMBER},
-                    longitude: {type: Type.NUMBER},
+                    latitude: { type: SchemaType.NUMBER },
+                    longitude: { type: SchemaType.NUMBER },
                   },
                 },
-                estimatedCost: {type: Type.STRING},
+                estimatedCost: { type: SchemaType.STRING },
                 category: {
-                  type: Type.STRING,
+                  type: SchemaType.STRING,
                   enum: [
                     'food',
                     'landmark',
@@ -60,6 +59,13 @@ export const generateItinerary = async (
   request: TripRequest,
 ): Promise<Itinerary> => {
   try {
+    if (!genAI) {
+      if (!GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY is missing from .env file');
+      }
+      genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    }
+
     const model = genAI.getGenerativeModel({
       model: 'gemini-1.5-flash',
       generationConfig: {
@@ -69,31 +75,26 @@ export const generateItinerary = async (
     });
 
     const prompt = `
-      Create a detailed ${request.days}-day itinerary for a trip to ${
-      request.destination
-    }.
+      Create a detailed ${request.days}-day itinerary for a trip to ${request.destination
+      }.
       Budget level: ${request.budget}.
       Interests: ${request.interests.join(', ')}.
       ${request.advanced?.pace ? `Pace: ${request.advanced.pace}` : ''}
-      ${
-        request.advanced?.travelGroup
-          ? `Group type: ${request.advanced.travelGroup}`
-          : ''
+      ${request.advanced?.travelGroup
+        ? `Group type: ${request.advanced.travelGroup}`
+        : ''
       }
-      ${
-        request.advanced?.dietary
-          ? `Dietary restrictions: ${request.advanced.dietary.join(', ')}`
-          : ''
+      ${request.advanced?.dietary
+        ? `Dietary restrictions: ${request.advanced.dietary.join(', ')}`
+        : ''
       }
-      ${
-        request.advanced?.stayArea
-          ? `Staying in/near: ${request.advanced.stayArea}`
-          : ''
+      ${request.advanced?.stayArea
+        ? `Staying in/near: ${request.advanced.stayArea}`
+        : ''
       }
-      ${
-        request.advanced?.customNote
-          ? `Additional notes: ${request.advanced.customNote}`
-          : ''
+      ${request.advanced?.customNote
+        ? `Additional notes: ${request.advanced.customNote}`
+        : ''
       }
       
       For each activity, provide estimated coordinates (latitude and longitude) to be plotted on a map.

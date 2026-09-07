@@ -19,10 +19,21 @@ import {
   Search,
   ArrowRight,
 } from 'lucide-react-native';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { MapRoute } from '../components/MapRoute';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TripSummary'>;
 
 export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
+  const { currentItinerary } = useSelector((state: RootState) => state.itinerary);
+  const { budget } = useSelector((state: RootState) => state.trip);
+
+  const title = currentItinerary ? `${currentItinerary.destination} Explorer` : 'Tokyo Explorer';
+  const subtitle = currentItinerary ? `${currentItinerary.days.length} Days • ${budget.toUpperCase()} Budget` : '5 Days • Medium Budget';
+  const lengthStr = currentItinerary ? `${currentItinerary.days.length} Days` : '5 Days';
+  const allActivities = currentItinerary ? currentItinerary.days.flatMap((d: any) => d.activities) : [];
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -50,8 +61,8 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
           {/* Title Row */}
           <View style={styles.titleRow}>
             <View style={{flex: 1}}>
-              <Text style={styles.title}>Tokyo Explorer</Text>
-              <Text style={styles.subtitle}>5 Days • Medium Budget</Text>
+              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.subtitle}>{subtitle}</Text>
             </View>
             <View style={styles.planeCircle}>
               <Plane
@@ -70,7 +81,7 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
               </View>
               <View>
                 <Text style={styles.infoLabel}>LENGTH</Text>
-                <Text style={styles.infoValue}>5 Days</Text>
+                <Text style={styles.infoValue}>{lengthStr}</Text>
               </View>
             </View>
             <View style={styles.infoBox}>
@@ -88,21 +99,22 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
           <View style={styles.mapSection}>
             <Text style={styles.mapSectionTitle}>Trip Overview</Text>
             <View style={styles.mapContainer}>
-              <Image
-                source={{
-                  uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop',
-                }}
-                style={styles.mapImage}
-              />
-              {/* Fake pins to make it look like a map */}
-              <View style={[styles.fakePin, {top: '30%', left: '40%'}]} />
-              <View style={[styles.fakePinBlue, {top: '50%', left: '60%'}]} />
-              <View style={[styles.fakePinOrange, {top: '40%', left: '70%'}]} />
-              <View style={[styles.fakePin, {top: '60%', left: '30%'}]} />
-              <View style={[styles.fakePinOrange, {top: '20%', left: '50%'}]} />
-              <View style={[styles.fakePinBlue, {top: '70%', left: '55%'}]} />
+              {allActivities.length > 0 ? (
+                 <MapRoute activities={allActivities} />
+              ) : (
+                <>
+                  <Image
+                    source={{
+                      uri: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=400&auto=format&fit=crop',
+                    }}
+                    style={styles.mapImage}
+                  />
+                  <View style={[styles.fakePin, {top: '30%', left: '40%'}]} />
+                  <View style={[styles.fakePinBlue, {top: '50%', left: '60%'}]} />
+                </>
+              )}
 
-              <TouchableOpacity style={styles.expandMapBtn}>
+              <TouchableOpacity style={styles.expandMapBtn} onPress={() => navigation.navigate('ItineraryDetail')}>
                 <Search color="#0F4C5C" size={16} />
                 <Text style={styles.expandMapText}>TAP TO EXPAND MAP</Text>
               </TouchableOpacity>

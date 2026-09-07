@@ -1,5 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, Alert} from 'react-native';
+import {useSelector} from 'react-redux';
+import {RootState} from '../store';
 import {fp} from '../utils/responsive';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../navigation/types';
@@ -33,17 +35,11 @@ export const LoadingScreen: React.FC<Props> = ({navigation}) => {
   const progress = useSharedValue(0);
   const globeGlow = useSharedValue(0.4);
 
+  const {loading, error, currentItinerary} = useSelector((state: RootState) => state.itinerary);
+
   useEffect(() => {
-    // Total loading time 6 seconds
-    progress.value = withTiming(
-      1,
-      {duration: 6000, easing: Easing.linear},
-      finished => {
-        if (finished) {
-          runOnJS(navigation.replace)('TripSummary');
-        }
-      },
-    );
+    // Start progress (slowing down as it gets closer to 90%)
+    progress.value = withTiming(0.9, {duration: 15000, easing: Easing.out(Easing.quad)});
 
     // Globe glow/pulse loop
     globeGlow.value = withRepeat(
@@ -59,7 +55,21 @@ export const LoadingScreen: React.FC<Props> = ({navigation}) => {
     return () => {
       clearInterval(interval);
     };
-  }, [navigation, progress, globeGlow]);
+  }, [globeGlow, progress]);
+
+  useEffect(() => {
+    if (!loading && currentItinerary) {
+      progress.value = withTiming(1, {duration: 500}, (finished) => {
+        if (finished) {
+          runOnJS(navigation.replace)('TripSummary');
+        }
+      });
+    } else if (!loading && error) {
+      runOnJS(Alert.alert)('Generation Failed', error, [
+        {text: 'OK', onPress: () => navigation.goBack()},
+      ]);
+    }
+  }, [loading, currentItinerary, error, navigation, progress]);
 
   // Quadratic Bezier Curve points (bottom-left to top-right)
   const p0 = {x: 20, y: 140};
