@@ -107,11 +107,15 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
     navigation.navigate('Loading');
   };
 
+
+
   const showDropdown = searchInput.length > 0 && !destination;
 
   return (
     <ImageBackground
-      source={{ uri: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop' }}
+      source={{
+        uri: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop',
+      }}
       style={styles.container}>
       <View style={styles.overlay} />
 
@@ -119,10 +123,11 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
         <KeyboardAvoidingView
           style={styles.flex1}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Explore the World</Text>
-            <Text style={styles.headerSubtitle}>Let AI craft your perfect itinerary.</Text>
+            <Text style={styles.headerSubtitle}>
+              Let AI craft your perfect itinerary.
+            </Text>
           </View>
 
           <ScrollView
@@ -130,9 +135,11 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled">
-
-            <BlurView style={styles.glassCard} blurType="light" blurAmount={20} reducedTransparencyFallbackColor="white">
-
+            <BlurView
+              style={styles.glassCard}
+              blurType="light"
+              blurAmount={20}
+              reducedTransparencyFallbackColor="white">
               {/* DESTINATION */}
               <View style={[styles.section, { zIndex: 10 }]}>
                 <Text style={styles.label}>Destination</Text>
@@ -140,7 +147,9 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                 {destination ? (
                   <View style={styles.selectedDestinationPill}>
                     <MapPin color="#0F4C5C" size={20} />
-                    <Text style={styles.selectedDestinationText}>{destination}</Text>
+                    <Text style={styles.selectedDestinationText}>
+                      {destination}
+                    </Text>
                     <TouchableOpacity
                       style={styles.clearBtn}
                       onPress={() => dispatch(setReduxDestination(''))}>
@@ -164,7 +173,9 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                         }}
                         returnKeyType="done"
                       />
-                      {isSearching && <ActivityIndicator size="small" color="#0F4C5C" />}
+                      {isSearching && (
+                        <ActivityIndicator size="small" color="#0F4C5C" />
+                      )}
                     </View>
 
                     {/* Inline Dropdown for suggestions */}
@@ -173,24 +184,36 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                         {suggestions.map((s, idx) => (
                           <TouchableOpacity
                             key={s.placeId}
-                            style={[styles.dropdownItem, idx < suggestions.length - 1 && styles.dropdownBorder]}
-                            onPress={() => handleSelectSuggestion(s.description)}>
+                            style={[
+                              styles.dropdownItem,
+                              idx < suggestions.length - 1 &&
+                              styles.dropdownBorder,
+                            ]}
+                            onPress={() =>
+                              handleSelectSuggestion(s.description)
+                            }>
                             <MapPin color="#FF6B4A" size={16} />
                             <Text style={styles.dropdownText} numberOfLines={1}>
                               {s.description}
                             </Text>
                           </TouchableOpacity>
                         ))}
-                        {suggestions.length === 0 && !isSearching && searchInput.length > 1 && (
-                          <TouchableOpacity
-                            style={styles.dropdownItem}
-                            onPress={() => handleSelectSuggestion(searchInput.trim())}>
-                            <MapPin color="#FF6B4A" size={16} />
-                            <Text style={styles.dropdownText} numberOfLines={1}>
-                              Search for "{searchInput}"
-                            </Text>
-                          </TouchableOpacity>
-                        )}
+                        {suggestions.length === 0 &&
+                          !isSearching &&
+                          searchInput.length > 1 && (
+                            <TouchableOpacity
+                              style={styles.dropdownItem}
+                              onPress={() =>
+                                handleSelectSuggestion(searchInput.trim())
+                              }>
+                              <MapPin color="#FF6B4A" size={16} />
+                              <Text
+                                style={styles.dropdownText}
+                                numberOfLines={1}>
+                                Search for "{searchInput}"
+                              </Text>
+                            </TouchableOpacity>
+                          )}
                       </View>
                     )}
                   </View>
@@ -204,7 +227,9 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                   <TouchableOpacity
                     activeOpacity={0.7}
                     style={styles.stepperBtn}
-                    onPress={() => dispatch(setReduxDays(Math.max(1, days - 1)))}>
+                    onPress={() =>
+                      dispatch(setReduxDays(Math.max(1, days - 1)))
+                    }>
                     <Text style={styles.stepperBtnText}>-</Text>
                   </TouchableOpacity>
                   <View style={styles.stepperValueContainer}>
@@ -214,7 +239,9 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                   <TouchableOpacity
                     activeOpacity={0.7}
                     style={styles.stepperBtn}
-                    onPress={() => dispatch(setReduxDays(Math.min(30, days + 1)))}>
+                    onPress={() =>
+                      dispatch(setReduxDays(Math.min(30, days + 1)))
+                    }>
                     <Text style={styles.stepperBtnText}>+</Text>
                   </TouchableOpacity>
                 </View>
@@ -224,13 +251,13 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
               <View style={styles.section}>
                 <Text style={styles.label}>Budget</Text>
                 <View style={styles.budgetCardsContainer}>
-                  {(['low', 'medium', 'high'] as const).map((b) => {
+                  {(['low', 'mid', 'high'] as const).map(b => {
                     const isSelected = budget === b;
                     let Icon = Wallet;
                     let title = 'Budget';
                     let subtitle = 'Cost-friendly';
 
-                    if (b === 'medium') {
+                    if (b === 'mid') {
                       Icon = CreditCard;
                       title = 'Standard';
                       subtitle = 'Balanced';
@@ -244,11 +271,30 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                       <TouchableOpacity
                         key={b}
                         activeOpacity={0.7}
-                        style={[styles.budgetCard, isSelected && styles.budgetCardActive]}
+                        style={[
+                          styles.budgetCard,
+                          isSelected && styles.budgetCardActive,
+                        ]}
                         onPress={() => dispatch(setReduxBudget(b))}>
-                        <Icon color={isSelected ? '#0F4C5C' : '#9CA3AF'} size={24} style={{ marginBottom: 8 }} />
-                        <Text style={[styles.budgetCardTitle, isSelected && styles.budgetCardTitleActive]}>{title}</Text>
-                        <Text style={[styles.budgetCardSubtitle, isSelected && styles.budgetCardSubtitleActive]}>{subtitle}</Text>
+                        <Icon
+                          color={isSelected ? '#0F4C5C' : '#9CA3AF'}
+                          size={24}
+                          style={{ marginBottom: 8 }}
+                        />
+                        <Text
+                          style={[
+                            styles.budgetCardTitle,
+                            isSelected && styles.budgetCardTitleActive,
+                          ]}>
+                          {title}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.budgetCardSubtitle,
+                            isSelected && styles.budgetCardSubtitleActive,
+                          ]}>
+                          {subtitle}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -259,10 +305,12 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
               <View style={styles.section}>
                 <View style={styles.interestsHeader}>
                   <Text style={styles.label}>Interests</Text>
-                  <Text style={styles.interestsCount}>{interests.length}/5</Text>
+                  <Text style={styles.interestsCount}>
+                    {interests.length}/5
+                  </Text>
                 </View>
                 <View style={styles.chipsContainer}>
-                  {INTERESTS.map((interest) => {
+                  {INTERESTS.map(interest => {
                     const isSelected = interests.includes(interest.id);
                     const Icon = interest.icon;
                     return (
@@ -270,9 +318,19 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                         key={interest.id}
                         activeOpacity={0.8}
                         style={[styles.chip, isSelected && styles.chipActive]}
-                        onPress={() => dispatch(toggleReduxInterest(interest.id))}>
-                        <Icon color={isSelected ? '#FFFFFF' : '#4B5563'} size={14} style={{ marginRight: 6 }} />
-                        <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
+                        onPress={() =>
+                          dispatch(toggleReduxInterest(interest.id))
+                        }>
+                        <Icon
+                          color={isSelected ? '#FFFFFF' : '#4B5563'}
+                          size={14}
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text
+                          style={[
+                            styles.chipText,
+                            isSelected && styles.chipTextActive,
+                          ]}>
                           {interest.label}
                         </Text>
                       </TouchableOpacity>
@@ -280,18 +338,30 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                   })}
                 </View>
               </View>
-
             </BlurView>
           </ScrollView>
 
           <View style={styles.footer}>
             <TouchableOpacity
-              style={[styles.submitButton, !isFormValid && styles.submitButtonDisabled]}
+              style={[
+                styles.submitButton,
+                !isFormValid && styles.submitButtonDisabled,
+              ]}
               onPress={handleSubmit}
               disabled={!isFormValid}
               activeOpacity={0.9}>
-              <Sparkles color={isFormValid ? '#FFFFFF' : '#9CA3AF'} size={20} style={{ marginRight: 8 }} />
-              <Text style={[styles.submitButtonText, !isFormValid && { color: '#9CA3AF' }]}>Generate Itinerary</Text>
+              <Sparkles
+                color={isFormValid ? '#FFFFFF' : '#9CA3AF'}
+                size={20}
+                style={{ marginRight: 8 }}
+              />
+              <Text
+                style={[
+                  styles.submitButtonText,
+                  !isFormValid && { color: '#9CA3AF' },
+                ]}>
+                Generate Itinerary
+              </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>

@@ -1,139 +1,106 @@
 import React, {useEffect, useRef} from 'react';
-import {View, Text, StyleSheet, Animated, Easing} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Easing,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
 import {fp} from '../utils/responsive';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../navigation/types';
-import Svg, {Path, Circle, G, Rect} from 'react-native-svg';
+import Svg, {Path, Circle, Defs, LinearGradient, Stop} from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 
-const PRIMARY_COLOR = '#144C5A';
-const ICON_COLOR = '#144C5A';
-const ACCENT_COLOR = '#F05A4A';
+const PRIMARY_COLOR = '#0F4C5C';
+const ACCENT_COLOR = '#FF6B4A';
 
-// ----------------- CUSTOM ICONS -----------------
+const BrandLogoIcon = () => (
+  <Svg width={54} height={54} viewBox="0 0 52 52">
+    <Defs>
+      <LinearGradient id="routeGrad" x1="0" y1="1" x2="1" y2="0">
+        <Stop offset="0%" stopColor="#0F4C5C" />
+        <Stop offset="100%" stopColor="#FF6B4A" />
+      </LinearGradient>
+    </Defs>
 
-const CustomRouteIcon = () => (
-  <Svg width={46} height={46} viewBox="0 0 46 46">
-    {/* S-shaped Connecting Path */}
+    {/* Route Curve */}
     <Path
-      d="M 11 32 L 28 32 C 34 32, 34 24, 28 24 L 16 24 C 10 24, 10 16, 16 16 L 31 16"
+      d="M 14 36 C 24 36, 20 26, 26 26 C 32 26, 30 16, 38 16"
       fill="none"
-      stroke={ICON_COLOR}
-      strokeWidth={3.5}
+      stroke="url(#routeGrad)"
+      strokeWidth={3.8}
       strokeLinecap="round"
-      strokeLinejoin="round"
     />
 
-    {/* Start Pin (Bottom Left) */}
-    <G x="4.4" y="19.9" transform="scale(0.55)">
-      <Path
-        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
-        fill="#FFF"
-        stroke={ICON_COLOR}
-        strokeWidth={4.5}
-        strokeLinejoin="round"
-      />
-      <Circle cx="12" cy="9" r="3.5" fill={ICON_COLOR} />
-    </G>
+    {/* Departure Dot */}
+    <Circle cx={14} cy={36} r={4.5} fill="#0F4C5C" />
+    <Circle cx={14} cy={36} r={2} fill="#FFFFFF" />
 
-    {/* End Pin (Top Right) */}
-    <G x="24.4" y="3.9" transform="scale(0.55)">
-      <Path
-        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
-        fill="#FFF"
-        stroke={ICON_COLOR}
-        strokeWidth={4.5}
-        strokeLinejoin="round"
-      />
-      <Circle cx="12" cy="9" r="3.5" fill={ICON_COLOR} />
-    </G>
-  </Svg>
-);
+    {/* Destination Pin */}
+    <Circle cx={38} cy={16} r={5} fill="#FF6B4A" />
+    <Circle cx={38} cy={16} r={2.2} fill="#FFFFFF" />
 
-const MountainBg = () => (
-  <Svg width={240} height={160} viewBox="0 0 240 160">
+    {/* Sparkle Star */}
     <Path
-      d="M 10 160 L 85 45 C 90 35, 105 35, 110 45 L 150 110 L 160 95 C 165 85, 180 85, 185 95 L 230 160 Z"
-      fill="rgba(255,255,255,0.08)"
+      d="M 44 9 Q 44 12, 47 12 Q 44 12, 44 15 Q 44 12, 41 12 Q 44 12, 44 9 Z"
+      fill="#F59E0B"
     />
-    <Circle cx="170" cy="40" r="16" fill="rgba(255,255,255,0.08)" />
   </Svg>
 );
-
-const PlaneBg = () => (
-  <Svg width={180} height={180} viewBox="0 0 180 180">
-    <G transform="rotate(-15, 90, 90)">
-      {/* Trail underneath */}
-      <Rect
-        x="15"
-        y="115"
-        width="60"
-        height="4"
-        rx="2"
-        fill="rgba(255,255,255,0.06)"
-      />
-      {/* Body */}
-      <Path
-        d="M 40 90 L 130 90 C 150 90, 160 85, 160 80 C 160 75, 150 70, 130 70 L 40 70 C 25 70, 25 90, 40 90 Z"
-        fill="rgba(255,255,255,0.08)"
-      />
-      {/* Bottom Wing */}
-      <Path
-        d="M 80 90 L 40 130 L 65 130 L 110 90 Z"
-        fill="rgba(255,255,255,0.08)"
-      />
-      {/* Top Wing */}
-      <Path
-        d="M 90 70 L 65 35 L 85 35 L 115 70 Z"
-        fill="rgba(255,255,255,0.08)"
-      />
-      {/* Tail Bottom */}
-      <Path
-        d="M 45 90 L 30 110 L 45 110 L 60 90 Z"
-        fill="rgba(255,255,255,0.08)"
-      />
-      {/* Tail Top */}
-      <Path
-        d="M 50 70 L 40 50 L 50 50 L 60 70 Z"
-        fill="rgba(255,255,255,0.08)"
-      />
-    </G>
-  </Svg>
-);
-
-const MapBg = () => (
-  <View style={styles.bgMapContainer}>
-    <View style={[styles.bgMapPanel, {transform: [{skewY: '-15deg'}]}]} />
-    <View style={[styles.bgMapPanel, {transform: [{skewY: '15deg'}]}]} />
-    <View style={[styles.bgMapPanel, {transform: [{skewY: '-15deg'}]}]} />
-  </View>
-);
-
-// ------------------------------------------------
 
 export const SplashScreen: React.FC<Props> = ({navigation}) => {
-  const progressAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Progress bar animation
-    Animated.timing(progressAnim, {
-      toValue: 1,
-      duration: 1600,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: false,
-    }).start();
+    // Coordinated entrance
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.back(1.2)),
+        useNativeDriver: true,
+      }),
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 1800,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }),
+    ]).start();
 
-    // Fade in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
+    // Gentle pulse loop behind logo
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.14,
+          duration: 1300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
 
-    // Automatically navigate after animation finishes
+    // Automatic navigation
     const timer = setTimeout(async () => {
       try {
         const hasCompleted = await AsyncStorage.getItem(
@@ -145,93 +112,72 @@ export const SplashScreen: React.FC<Props> = ({navigation}) => {
           navigation.replace('Onboarding');
         }
       } catch (error) {
-        // Fallback to onboarding if there's an error reading
         navigation.replace('Onboarding');
       }
-    }, 2000);
+    }, 2100);
+
     return () => clearTimeout(timer);
-  }, [navigation, progressAnim, fadeAnim]);
+  }, [navigation, fadeAnim, scaleAnim, pulseAnim, progressAnim]);
 
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
 
-  const planeTranslateX = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-40, 120], // move plane to the right
-  });
-
-  const planeTranslateY = progressAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [30, -50], // move plane up
-  });
-
   return (
     <View style={styles.container}>
-      {/* Background decorations */}
-      <View style={styles.bgDecorationContainer}>
-        {/* Dashed curved line (Sine wave shape) */}
-        <Animated.View style={[StyleSheet.absoluteFill, {opacity: fadeAnim}]}>
-          <Svg
-            width="100%"
-            height="100%"
-            viewBox="0 0 400 800"
-            preserveAspectRatio="none">
-            <Path
-              d="M -50 350 C 100 250, 250 450, 450 300"
-              stroke="rgba(255,255,255,0.12)"
-              strokeWidth="1.5"
-              strokeDasharray="8,10"
-              fill="none"
-            />
-          </Svg>
-        </Animated.View>
+      <StatusBar barStyle="light-content" backgroundColor={PRIMARY_COLOR} />
 
-        {/* Mountain illustration */}
-        <Animated.View style={[styles.mountainPos, {opacity: fadeAnim}]}>
-          <MountainBg />
-        </Animated.View>
-
-        {/* Plane illustration animated */}
+      <SafeAreaView style={styles.safeArea}>
+        {/* Centered Brand & Clear Purpose */}
         <Animated.View
           style={[
-            styles.planePos,
+            styles.centerContent,
             {
               opacity: fadeAnim,
-              transform: [
-                {translateX: planeTranslateX},
-                {translateY: planeTranslateY},
-              ],
+              transform: [{scale: scaleAnim}],
             },
           ]}>
-          <PlaneBg />
+          {/* Logo with Ambient Glow */}
+          <View style={styles.emblemWrapper}>
+            <Animated.View
+              style={[
+                styles.glowAura,
+                {transform: [{scale: pulseAnim}]},
+              ]}
+            />
+            <View style={styles.logoCard}>
+              <BrandLogoIcon />
+            </View>
+          </View>
+
+          {/* App Name */}
+          <Text style={styles.appName}>ItinerAI</Text>
+
+          {/* Clear, Instant Value Proposition */}
+          <Text style={styles.appTagline}>
+            Smart Travel Itineraries in Seconds
+          </Text>
+
+          {/* Minimal 3-pillar feature summary */}
+          <View style={styles.pillarsRow}>
+            <Text style={styles.pillarText}>Day-by-Day Plans</Text>
+            <View style={styles.pillarDot} />
+            <Text style={styles.pillarText}>Live Weather</Text>
+            <View style={styles.pillarDot} />
+            <Text style={styles.pillarText}>Instant Swap</Text>
+          </View>
         </Animated.View>
 
-        {/* Map illustration */}
-        <Animated.View style={[styles.mapPos, {opacity: fadeAnim}]}>
-          <MapBg />
+        {/* Clean Progress Bar at bottom */}
+        <Animated.View style={[styles.footerContainer, {opacity: fadeAnim}]}>
+          <View style={styles.progressTrack}>
+            <Animated.View
+              style={[styles.progressFill, {width: progressWidth}]}
+            />
+          </View>
         </Animated.View>
-      </View>
-
-      {/* Main Content */}
-      <Animated.View style={[styles.content, {opacity: fadeAnim}]}>
-        <View style={styles.iconContainer}>
-          <CustomRouteIcon />
-        </View>
-        <Text style={styles.title}>ItinerAI</Text>
-        <Text style={styles.tagline}>Your trip, planned in seconds</Text>
-      </Animated.View>
-
-      {/* Progress Bar & Footer */}
-      <Animated.View style={[styles.bottomContainer, {opacity: fadeAnim}]}>
-        <View style={styles.progressBarTrack}>
-          <Animated.View
-            style={[styles.progressBarFill, {width: progressWidth}]}
-          />
-        </View>
-        <Text style={styles.bottomText}>ADVENTURE AWAITS</Text>
-      </Animated.View>
+      </SafeAreaView>
     </View>
   );
 };
@@ -240,93 +186,98 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: PRIMARY_COLOR,
+  },
+  safeArea: {
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  centerContent: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
+    paddingHorizontal: 24,
   },
-  bgDecorationContainer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  mountainPos: {
-    position: 'absolute',
-    top: '12%',
-    alignSelf: 'center',
-  },
-  planePos: {
-    position: 'absolute',
-    top: '38%',
-    left: '8%',
-  },
-  mapPos: {
-    position: 'absolute',
-    bottom: '18%',
-    alignSelf: 'center',
-  },
-  bgMapContainer: {
-    flexDirection: 'row',
-  },
-  bgMapPanel: {
-    width: 35,
-    height: 90,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    marginHorizontal: 1,
-    borderRadius: 4,
-  },
-  content: {
+  emblemWrapper: {
+    width: 104,
+    height: 104,
+    justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
-    marginTop: -40, // slightly offset content up to balance map
+    marginBottom: 20,
   },
-  iconContainer: {
-    width: 84,
-    height: 84,
+  glowAura: {
+    position: 'absolute',
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    backgroundColor: 'rgba(255, 107, 74, 0.22)',
+  },
+  logoCard: {
+    width: 86,
+    height: 86,
     backgroundColor: '#FFFFFF',
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 8},
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
     elevation: 8,
   },
-  title: {
-    fontSize: fp(3.6),
+  appName: {
+    fontSize: fp(4.2),
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: -0.5,
-    marginBottom: 6,
+    letterSpacing: -0.8,
+    marginBottom: 8,
   },
-  tagline: {
-    fontSize: fp(1.6),
-    fontWeight: '500',
+  appTagline: {
+    fontSize: fp(1.65),
+    fontWeight: '600',
     color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    letterSpacing: -0.2,
+    marginBottom: 14,
   },
-  bottomContainer: {
-    position: 'absolute',
-    bottom: 60,
+  pillarsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 18,
+  },
+  pillarText: {
+    fontSize: fp(1.2),
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.85)',
+  },
+  pillarDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: ACCENT_COLOR,
+    marginHorizontal: 8,
+  },
+  footerContainer: {
+    alignItems: 'center',
+    paddingBottom: 20,
     width: '100%',
   },
-  progressBarTrack: {
-    width: 60,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
-    marginBottom: 16,
+  progressTrack: {
+    width: 80,
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderRadius: 1.5,
     overflow: 'hidden',
-    flexDirection: 'row',
   },
-  progressBarFill: {
+  progressFill: {
     height: '100%',
     backgroundColor: ACCENT_COLOR,
-    borderRadius: 2,
-  },
-  bottomText: {
-    fontSize: fp(1.0),
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.6)',
-    letterSpacing: 2,
+    borderRadius: 1.5,
   },
 });
