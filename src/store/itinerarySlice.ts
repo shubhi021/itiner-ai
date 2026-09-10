@@ -5,6 +5,7 @@ import {
   suggestAlternativeActivity,
 } from '../services/llmService';
 import {WeatherData, getWeather} from '../services/weatherService';
+import {storageService} from '../services/storageService';
 
 export interface ItineraryState {
   currentItinerary: Itinerary | null;
@@ -13,6 +14,7 @@ export interface ItineraryState {
   weather: WeatherData | null;
   weatherLoading: boolean;
   pivotingActivity: {dayIndex: number; activityIndex: number} | null;
+  isOfflineMode: boolean;
 }
 
 const initialState: ItineraryState = {
@@ -22,13 +24,31 @@ const initialState: ItineraryState = {
   weather: null,
   weatherLoading: false,
   pivotingActivity: null,
+  isOfflineMode: false,
 };
+
+export const hydrateCachedItinerary = createAsyncThunk(
+  'itinerary/hydrateCachedItinerary',
+  async (_, {rejectWithValue}) => {
+    try {
+      const cached = await storageService.getCachedActiveItinerary();
+      return cached;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to load cached itinerary');
+    }
+  },
+);
 
 export const fetchItinerary = createAsyncThunk(
   'itinerary/fetchItinerary',
   async (request: TripRequest, {rejectWithValue}) => {
     try {
       const result = await generateItineraryService(request);
+      // Auto-cache generated itinerary for offline access
+      await storageService.cacheActiveItinerary({
+        itinerary: result,
+        budget: request.budget,
+      });
       return result;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to generate itinerary');
@@ -46,7 +66,20 @@ export const fetchWeatherForTrip = createAsyncThunk(
     {rejectWithValue},
   ) => {
     try {
+      // 1. Check local offline cache first (TTL 1 hour)
+      const cachedWeather = await storageService.getCachedWeather(
+        params.destination,
+      );
+      if (cachedWeather) {
+        return cachedWeather;
+      }
+
+      // 2. Fetch fresh weather over network
       const weather = await getWeather(params.destination, params.coordinates);
+      if (weather) {
+        // Cache freshly fetched weather
+        await storageService.cacheWeather(params.destination, weather);
+      }
       return weather;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch weather');
@@ -114,6 +147,16 @@ const itinerarySlice = createSlice({
   reducers: {
     setItinerary: (state, action: PayloadAction<Itinerary>) => {
       state.currentItinerary = action.payload;
+      storageService.cacheActiveItinerary({
+        itinerary: action.payload,
+        weather: state.weather,
+      });
+    },
+    setWeather: (state, action: PayloadAction<WeatherData | null>) => {
+      state.weather = action.payload;
+    },
+    setIsOfflineMode: (state, action: PayloadAction<boolean>) => {
+      state.isOfflineMode = action.payload;
     },
     clearItinerary: state => {
       state.currentItinerary = null;
@@ -124,6 +167,15 @@ const itinerarySlice = createSlice({
   },
   extraReducers: builder => {
     builder
+      // Hydrate Cached Itinerary
+      .addCase(hydrateCachedItinerary.fulfilled, (state, action) => {
+        if (action.payload?.itinerary && !state.currentItinerary) {
+          state.currentItinerary = action.payload.itinerary;
+          if (action.payload.weather) {
+            state.weather = action.payload.weather;
+          }
+        }
+      })
       // Fetch Itinerary
       .addCase(fetchItinerary.pending, state => {
         state.loading = true;
@@ -167,6 +219,12 @@ const itinerarySlice = createSlice({
         if (state.currentItinerary && state.currentItinerary.days[dayIndex]) {
           state.currentItinerary.days[dayIndex].activities[activityIndex] =
             activity;
+
+          // Re-cache updated itinerary with swapped activity
+          storageService.cacheActiveItinerary({
+            itinerary: state.currentItinerary,
+            weather: state.weather,
+          });
         }
       })
       .addCase(pivotActivity.rejected, state => {
@@ -175,6 +233,7 @@ const itinerarySlice = createSlice({
   },
 });
 
-export const {setItinerary, clearItinerary} = itinerarySlice.actions;
+export const {setItinerary, setWeather, setIsOfflineMode, clearItinerary} =
+  itinerarySlice.actions;
 
 export default itinerarySlice.reducer;

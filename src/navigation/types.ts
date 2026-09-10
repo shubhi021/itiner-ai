@@ -1,4 +1,5 @@
 import {NavigatorScreenParams} from '@react-navigation/native';
+import {Activity} from '../types/trip';
 
 export type MainTabParamList = {
   Plan: undefined;
@@ -11,7 +12,13 @@ export type RootStackParamList = {
   Onboarding: undefined;
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Loading: undefined;
-  TripSummary: undefined;
-  ItineraryDetail: undefined;
-  ActivityDetail: undefined;
+  TripSummary: {tripId?: string} | undefined;
+  ItineraryDetail: {tripId?: string; isOffline?: boolean} | undefined;
+  ActivityDetail:
+    | {
+        activity: Activity;
+        dayNumber: number;
+        destination: string;
+      }
+    | undefined;
 };
