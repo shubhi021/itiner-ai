@@ -28,12 +28,8 @@ import { fp } from '../utils/responsive';
 import {
   Search,
   MoreVertical,
-  Calendar,
   Compass,
   MapPin,
-  Trash2,
-  CheckCircle2,
-  Share2,
   X,
   Sparkles,
 } from 'lucide-react-native';
@@ -54,8 +50,6 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [selectedTripForMenu, setSelectedTripForMenu] =
-    useState<SavedTrip | null>(null);
 
   useEffect(() => {
     dispatch(loadSavedTrips());
@@ -123,15 +117,18 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
           text: 'Share Trip',
           onPress: async () => {
             try {
-              const shareSummary = `${trip.title} (${trip.destination})\n${trip.duration} Day-by-Day Journey:\n\n` +
+              const shareSummary =
+                `${trip.title} (${trip.destination})\n${trip.duration} Day-by-Day Journey:\n\n` +
                 trip.itinerary.days
                   .map(
                     d =>
                       `Day ${d.day}:\n` +
-                      d.activities.map(a => `• ${a.time}: ${a.name} (${a.location})`).join('\n'),
+                      d.activities
+                        .map(a => `• ${a.time}: ${a.name} (${a.location})`)
+                        .join('\n'),
                   )
                   .join('\n\n') +
-                '\n\nPlanned with ItinerAI ✈️';
+                '\n\nPlanned with ItinerAI';
 
               await Share.share({
                 message: shareSummary,
@@ -248,7 +245,8 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
           <View>
             <Text style={styles.title}>Your Trips</Text>
             <Text style={styles.subtitle}>
-              {trips.length} {trips.length === 1 ? 'trip' : 'trips'} saved offline
+              {trips.length} {trips.length === 1 ? 'trip' : 'trips'} saved
+              offline
             </Text>
           </View>
 
