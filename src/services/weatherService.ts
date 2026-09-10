@@ -100,22 +100,22 @@ const parseWeatherData = (data: any, fallbackCity: string): WeatherData => {
 export const getWeatherTip = (condition: string, temp: number): string => {
   const cond = condition.toLowerCase();
   if (cond.includes('rain') || cond.includes('drizzle')) {
-    return '🌧️ Showers expected — tap Swap on outdoor stops for indoor options!';
+    return 'Showers expected — tap Swap on outdoor stops for indoor options!';
   }
   if (cond.includes('thunderstorm')) {
-    return '⚡ Storms in the area — great time for museums & indoor dining.';
+    return 'Storms in the area — great time for museums & indoor dining.';
   }
   if (cond.includes('snow')) {
-    return '❄️ Snowy weather — bundle up and discover cozy local cafes.';
+    return 'Snowy weather — bundle up and discover cozy local cafes.';
   }
   if (cond.includes('clear')) {
     if (temp > 28) {
-      return `☀️ Sunny & warm (${temp}°C) — stay hydrated and seek shade in afternoon.`;
+      return `Sunny & warm (${temp}°C) — stay hydrated and seek shade in afternoon.`;
     }
-    return `☀️ Pleasant & clear (${temp}°C) — perfect for outdoor walking & sightseeing.`;
+    return `Pleasant & clear (${temp}°C) — perfect for outdoor walking & sightseeing.`;
   }
   if (cond.includes('cloud')) {
-    return `⛅ Mild overcast (${temp}°C) — great walking weather without harsh sun.`;
+    return `Mild overcast (${temp}°C) — great walking weather without harsh sun.`;
   }
-  return `🌤️ ${condition} (${temp}°C) — check your schedule for ideal stops.`;
+  return `${condition} (${temp}°C) — check your schedule for ideal stops.`;
 };

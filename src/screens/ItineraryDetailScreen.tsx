@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -12,15 +12,19 @@ import {
   ActivityIndicator,
   Pressable,
   StatusBar,
+  Share,
+  Alert,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store';
-import { fetchWeatherForTrip, pivotActivity } from '../store/itinerarySlice';
-import { getWeatherTip } from '../services/weatherService';
-import { MapRoute } from '../components/MapRoute';
-import { Activity, Itinerary } from '../types/trip';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../store';
+import {fetchWeatherForTrip, pivotActivity} from '../store/itinerarySlice';
+import {saveTrip, deleteTrip} from '../store/savedTripsSlice';
+import {SavedTrip} from '../services/storageService';
+import {getWeatherTip} from '../services/weatherService';
+import {MapRoute} from '../components/MapRoute';
+import {Activity, Itinerary} from '../types/trip';
 import {
   ChevronLeft,
   Share2,
@@ -43,8 +47,10 @@ import {
   X,
   Check,
   Footprints,
+  Coins,
+  UtensilsCrossed,
 } from 'lucide-react-native';
-import { fp } from '../utils/responsive';
+import {fp} from '../utils/responsive';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ItineraryDetail'>;
 
@@ -106,7 +112,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'R. de Belém 84-92, 1300-085 Lisboa',
           estimatedCost: '€10-15',
           category: 'food',
-          coordinates: { latitude: 38.6975, longitude: -9.2032 },
+          coordinates: {latitude: 38.6975, longitude: -9.2032},
         },
         {
           name: 'Jerónimos Monastery',
@@ -116,7 +122,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Praça do Império 1400-206 Lisboa',
           estimatedCost: '€12',
           category: 'landmark',
-          coordinates: { latitude: 38.6979, longitude: -9.2066 },
+          coordinates: {latitude: 38.6979, longitude: -9.2066},
         },
         {
           name: 'Miradouro de Santa Catarina',
@@ -126,7 +132,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'R. de Santa Catarina, 1200-012 Lisboa',
           estimatedCost: 'Free',
           category: 'nature',
-          coordinates: { latitude: 38.7107, longitude: -9.1485 },
+          coordinates: {latitude: 38.7107, longitude: -9.1485},
         },
         {
           name: 'Bairro Alto Dining & Fado',
@@ -136,7 +142,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Bairro Alto, Lisboa',
           estimatedCost: '€30-45',
           category: 'nightlife',
-          coordinates: { latitude: 38.7126, longitude: -9.1444 },
+          coordinates: {latitude: 38.7126, longitude: -9.1444},
         },
       ],
     },
@@ -151,7 +157,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'R. de Santa Cruz do Castelo, 1100-129 Lisboa',
           estimatedCost: '€15',
           category: 'landmark',
-          coordinates: { latitude: 38.7139, longitude: -9.1335 },
+          coordinates: {latitude: 38.7139, longitude: -9.1335},
         },
         {
           name: 'Time Out Market',
@@ -161,7 +167,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Av. 24 de Julho 49, 1200-479 Lisboa',
           estimatedCost: '€18-25',
           category: 'food',
-          coordinates: { latitude: 38.7071, longitude: -9.146 },
+          coordinates: {latitude: 38.7071, longitude: -9.146},
         },
         {
           name: 'Avenida da Liberdade',
@@ -171,27 +177,35 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Av. da Liberdade, Lisboa',
           estimatedCost: 'Varies',
           category: 'shopping',
-          coordinates: { latitude: 38.7205, longitude: -9.1465 },
+          coordinates: {latitude: 38.7205, longitude: -9.1465},
         },
       ],
     },
   ],
 };
 
-const REASON_OPTIONS = [
-  { id: 'indoor', label: '🌧️ Indoor alternative (Rain-safe)' },
-  { id: 'budget', label: '💰 Budget-friendly pick' },
-  { id: 'relaxed', label: '🚶 Less walking / Relaxed' },
-  { id: 'food', label: '🍽️ Food & cafe spot' },
-  { id: 'surprise', label: '✨ Surprise alternative' },
+interface ReasonOption {
+  id: string;
+  label: string;
+  icon: any;
+}
+
+const REASON_OPTIONS: ReasonOption[] = [
+  {id: 'indoor', label: 'Indoor alternative (Rain-safe)', icon: CloudRain},
+  {id: 'budget', label: 'Budget-friendly pick', icon: Coins},
+  {id: 'relaxed', label: 'Less walking / Relaxed', icon: Footprints},
+  {id: 'food', label: 'Food & cafe spot', icon: UtensilsCrossed},
+  {id: 'surprise', label: 'Surprise alternative', icon: Sparkles},
 ];
 
-export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
+export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { currentItinerary, weather, weatherLoading, pivotingActivity } =
+  const {currentItinerary, weather, weatherLoading, pivotingActivity} =
     useSelector((state: RootState) => state.itinerary);
-  const { budget } = useSelector((state: RootState) => state.trip);
-
+  const {budget} = useSelector((state: RootState) => state.trip);
+  const {trips: savedTrips} = useSelector(
+    (state: RootState) => state.savedTrips,
+  );
   const [activeDayIndex, setActiveDayIndex] = useState(0);
 
   // Swap modal states
@@ -200,7 +214,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
     number | null
   >(null);
   const [selectedReason, setSelectedReason] = useState<string>(
-    '🌧️ Indoor alternative (Rain-safe)',
+    'Indoor alternative (Rain-safe)',
   );
   const [customReason, setCustomReason] = useState<string>('');
 
@@ -212,6 +226,85 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
   const daysCount = displayItinerary.days.length;
   const heroImageUrl = getDestinationImage(destinationStr);
 
+  // Check if current trip is bookmarked in offline storage
+  const isBookmarked = useMemo(() => {
+    return savedTrips.some(
+      t =>
+        (route.params?.tripId && t.id === route.params.tripId) ||
+        t.destination.trim().toLowerCase() ===
+          destinationStr.trim().toLowerCase(),
+    );
+  }, [savedTrips, route.params?.tripId, destinationStr]);
+
+  const handleToggleBookmark = () => {
+    const existing = savedTrips.find(
+      t =>
+        (route.params?.tripId && t.id === route.params.tripId) ||
+        t.destination.trim().toLowerCase() ===
+          destinationStr.trim().toLowerCase(),
+    );
+
+    if (existing) {
+      dispatch(deleteTrip(existing.id));
+      Alert.alert(
+        'Trip Removed',
+        'Removed from your offline saved trips collection.',
+      );
+    } else {
+      const newTrip: SavedTrip = {
+        id: route.params?.tripId || `trip_${Date.now()}`,
+        title: `${cityName} Journey`,
+        destination: destinationStr,
+        dates: `${daysCount} Days Plan`,
+        duration: `${daysCount} days`,
+        status: 'UPCOMING',
+        imageUrl: heroImageUrl,
+        itinerary: displayItinerary,
+        weather: weather,
+        savedAt: Date.now(),
+        budget: budget || 'mid',
+      };
+      dispatch(saveTrip(newTrip));
+      Alert.alert(
+        'Trip Saved!',
+        'This itinerary is now stored offline on your device.',
+      );
+    }
+  };
+
+  const handleShareItinerary = async () => {
+    try {
+      let shareText = `ItinerAI Travel Plan: ${destinationStr} (${daysCount} Days)\n`;
+      if (weather) {
+        shareText += `Forecast: ${weather.temp}°C, ${weather.condition}\n`;
+      }
+      shareText += '\n';
+
+      displayItinerary.days.forEach(day => {
+        shareText += `DAY ${day.day}\n`;
+        day.activities.forEach(act => {
+          shareText += `  • ${act.time} - ${
+            act.name
+          } (${act.category.toUpperCase()})\n`;
+          shareText += `    Location: ${act.location}\n`;
+          if (act.estimatedCost) {
+            shareText += `    Cost: ${act.estimatedCost}\n`;
+          }
+        });
+        shareText += '\n';
+      });
+
+      shareText += 'Handcrafted with ItinerAI';
+
+      await Share.share({
+        message: shareText,
+        title: `${cityName} Daily Plan`,
+      });
+    } catch (err) {
+      console.warn('Error sharing itinerary:', err);
+    }
+  };
+
   // Fetch weather context on mount / when itinerary updates
   useEffect(() => {
     const destination = displayItinerary.destination;
@@ -220,17 +313,20 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
     )?.coordinates;
 
     if (!weather && !weatherLoading) {
-      dispatch(fetchWeatherForTrip({ destination, coordinates: firstCoord }));
+      dispatch(fetchWeatherForTrip({destination, coordinates: firstCoord}));
     }
   }, [dispatch, displayItinerary, weather, weatherLoading]);
 
-  // Activities for current active day
-  const currentDayActivities: Activity[] =
-    displayItinerary.days[activeDayIndex]?.activities || [];
+  // Activities for current active day - memoized for performance
+  const currentDayActivities: Activity[] = useMemo(
+    () => displayItinerary.days[activeDayIndex]?.activities || [],
+    [displayItinerary, activeDayIndex],
+  );
 
-  const totalActivitiesCount = displayItinerary.days.reduce(
-    (acc, d) => acc + d.activities.length,
-    0,
+  const totalActivitiesCount = useMemo(
+    () =>
+      displayItinerary.days.reduce((acc, d) => acc + d.activities.length, 0),
+    [displayItinerary],
   );
 
   const renderWeatherIcon = (condition: string) => {
@@ -274,31 +370,38 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
   const getCategoryTagStyle = (category: string) => {
     switch (category) {
       case 'food':
-        return { backgroundColor: '#FFF1F2', color: '#E11D48' };
+        return {backgroundColor: '#FFF1F2', color: '#E11D48'};
       case 'landmark':
-        return { backgroundColor: '#EFF6FF', color: '#2563EB' };
+        return {backgroundColor: '#EFF6FF', color: '#2563EB'};
       case 'nature':
-        return { backgroundColor: '#ECFDF5', color: '#059669' };
+        return {backgroundColor: '#ECFDF5', color: '#059669'};
       case 'nightlife':
-        return { backgroundColor: '#F5F3FF', color: '#7C3AED' };
+        return {backgroundColor: '#F5F3FF', color: '#7C3AED'};
       case 'shopping':
-        return { backgroundColor: '#FFFBEB', color: '#D97706' };
+        return {backgroundColor: '#FFFBEB', color: '#D97706'};
       case 'other':
       default:
-        return { backgroundColor: '#E6F4F1', color: '#0F4C5C' };
+        return {backgroundColor: '#E6F4F1', color: '#0F4C5C'};
     }
   };
 
   const handleOpenSwap = (index: number) => {
+    if (route.params?.isOffline) {
+      Alert.alert(
+        'Offline Mode',
+        'AI activity swapping requires an active internet connection to contact Gemini.',
+      );
+      return;
+    }
     setSelectedActivityIndex(index);
     if (
       weather?.condition &&
       (weather.condition.toLowerCase().includes('rain') ||
         weather.condition.toLowerCase().includes('drizzle'))
     ) {
-      setSelectedReason('🌧️ Indoor alternative (Rain-safe)');
+      setSelectedReason('Indoor alternative (Rain-safe)');
     } else {
-      setSelectedReason('✨ Surprise alternative');
+      setSelectedReason('Surprise alternative');
     }
     setCustomReason('');
     setSwapModalVisible(true);
@@ -335,7 +438,9 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
         {/* Editorial Destination Hero */}
-        <ImageBackground source={{ uri: heroImageUrl }} style={styles.heroBackground}>
+        <ImageBackground
+          source={{uri: heroImageUrl}}
+          style={styles.heroBackground}>
           <View style={styles.heroOverlay}>
             <SafeAreaView style={styles.heroSafeArea}>
               {/* Top Navigation */}
@@ -347,10 +452,23 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
 
                 <View style={styles.topNavRight}>
-                  <TouchableOpacity style={styles.circleNavBtn}>
-                    <Bookmark size={18} color="#FFFFFF" />
+                  <TouchableOpacity
+                    style={[
+                      styles.circleNavBtn,
+                      isBookmarked && styles.circleNavBtnActive,
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={handleToggleBookmark}>
+                    <Bookmark
+                      size={18}
+                      color="#FFFFFF"
+                      fill={isBookmarked ? '#FFFFFF' : 'none'}
+                    />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.circleNavBtn}>
+                  <TouchableOpacity
+                    style={styles.circleNavBtn}
+                    activeOpacity={0.8}
+                    onPress={handleShareItinerary}>
                     <Share2 size={18} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
@@ -370,6 +488,11 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                       {budget.toUpperCase()} BUDGET
                     </Text>
                   </View>
+                  {route.params?.isOffline && (
+                    <View style={styles.offlinePill}>
+                      <Text style={styles.offlinePillText}>OFFLINE CACHED</Text>
+                    </View>
+                  )}
                 </View>
 
                 <Text style={styles.heroTitle}>{cityName} Daily Plan</Text>
@@ -416,8 +539,14 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
 
                   <View style={styles.weatherRight}>
                     <View style={styles.weatherStatItem}>
-                      <Droplets size={12} color="#0F4C5C" style={styles.statIcon} />
-                      <Text style={styles.weatherStatText}>{weather.humidity}%</Text>
+                      <Droplets
+                        size={12}
+                        color="#0F4C5C"
+                        style={styles.statIcon}
+                      />
+                      <Text style={styles.weatherStatText}>
+                        {weather.humidity}%
+                      </Text>
                     </View>
                     <View style={styles.weatherStatItem}>
                       <Wind size={12} color="#0F4C5C" style={styles.statIcon} />
@@ -462,7 +591,10 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                   <TouchableOpacity
                     key={d.day}
                     activeOpacity={0.7}
-                    style={[styles.dayTabPill, isActive && styles.dayTabPillActive]}
+                    style={[
+                      styles.dayTabPill,
+                      isActive && styles.dayTabPillActive,
+                    ]}
                     onPress={() => setActiveDayIndex(index)}>
                     <Text
                       style={[
@@ -490,7 +622,8 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
               <MapRoute activities={currentDayActivities} />
               <View style={styles.mapBadge}>
                 <Text style={styles.mapBadgeText}>
-                  Day {activeDayIndex + 1} Route • {currentDayActivities.length} Stops
+                  Day {activeDayIndex + 1} Route • {currentDayActivities.length}{' '}
+                  Stops
                 </Text>
               </View>
             </View>
@@ -528,7 +661,8 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                           AI Concierge is finding alternative...
                         </Text>
                         <Text style={styles.pivotingSubtitle}>
-                          Customizing {activity.time} slot matching weather & neighborhood
+                          Customizing {activity.time} slot matching weather &
+                          neighborhood
                         </Text>
                       </View>
                     </View>
@@ -537,20 +671,29 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
 
                 return (
                   <View key={`${activity.name}-${index}`}>
-                    {/* Activity Item Card */}
-                    <View style={styles.activityCard}>
+                    {/* Activity Item Card - Clickable for full details */}
+                    <TouchableOpacity
+                      style={styles.activityCard}
+                      activeOpacity={0.88}
+                      onPress={() =>
+                        navigation.navigate('ActivityDetail', {
+                          activity,
+                          dayNumber: activeDayIndex + 1,
+                          destination: destinationStr,
+                        })
+                      }>
                       {/* Top Card Row: Category Badge & Swap Button */}
                       <View style={styles.cardHeaderRow}>
                         <View
                           style={[
                             styles.categoryBadge,
-                            { backgroundColor: tagStyle.backgroundColor },
+                            {backgroundColor: tagStyle.backgroundColor},
                           ]}>
                           {renderCategoryIcon(activity.category)}
                           <Text
                             style={[
                               styles.categoryBadgeText,
-                              { color: tagStyle.color },
+                              {color: tagStyle.color},
                             ]}>
                             {activity.category.toUpperCase()}
                           </Text>
@@ -571,14 +714,22 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                       </View>
 
                       {/* Main Title & Time */}
-                      <Text style={styles.activityNameText}>{activity.name}</Text>
+                      <Text style={styles.activityNameText}>
+                        {activity.name}
+                      </Text>
 
                       <View style={styles.timeLocationRow}>
                         <View style={styles.timeTag}>
-                          <Text style={styles.timeTagText}>{activity.time}</Text>
+                          <Text style={styles.timeTagText}>
+                            {activity.time}
+                          </Text>
                         </View>
                         <View style={styles.locationCol}>
-                          <MapPin size={12} color="#94A3B8" style={styles.locIcon} />
+                          <MapPin
+                            size={12}
+                            color="#94A3B8"
+                            style={styles.locIcon}
+                          />
                           <Text
                             style={styles.locationText}
                             numberOfLines={1}
@@ -593,21 +744,36 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                         {activity.description}
                       </Text>
 
-                      {/* Footer: Estimated Cost */}
+                      {/* Footer: Estimated Cost & View Details hint */}
                       <View style={styles.cardFooter}>
-                        <Text style={styles.costLabel}>Estimated Cost</Text>
-                        <Text style={styles.costValue}>
-                          {activity.estimatedCost || 'Free entry'}
-                        </Text>
+                        <View>
+                          <Text style={styles.costLabel}>Estimated Cost</Text>
+                          <Text style={styles.costValue}>
+                            {activity.estimatedCost || 'Free entry'}
+                          </Text>
+                        </View>
+
+                        <View style={styles.cardFooterRight}>
+                          <Text style={styles.viewDetailsText}>Details</Text>
+                          <ChevronLeft
+                            size={13}
+                            color="#0F4C5C"
+                            style={{transform: [{rotate: '180deg'}]}}
+                          />
+                        </View>
                       </View>
-                    </View>
+                    </TouchableOpacity>
 
                     {/* Realistic Transit / Walking Connector Between Stops */}
                     {index < currentDayActivities.length - 1 && (
                       <View style={styles.transitConnector}>
                         <View style={styles.transitLine} />
                         <View style={styles.transitBubble}>
-                          <Footprints size={12} color="#94A3B8" style={styles.transitIcon} />
+                          <Footprints
+                            size={12}
+                            color="#94A3B8"
+                            style={styles.transitIcon}
+                          />
                           <Text style={styles.transitText}>
                             ~10-20 min transit / walk to next stop
                           </Text>
@@ -632,7 +798,9 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
         <Pressable
           style={styles.modalOverlay}
           onPress={() => setSwapModalVisible(false)}>
-          <Pressable style={styles.modalSheet} onPress={e => e.stopPropagation()}>
+          <Pressable
+            style={styles.modalSheet}
+            onPress={e => e.stopPropagation()}>
             <View style={styles.modalHandle} />
 
             <View style={styles.modalHeader}>
@@ -686,6 +854,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.modalSectionLabel}>Select reason or vibe:</Text>
             <View style={styles.chipsContainer}>
               {REASON_OPTIONS.map(opt => {
+                const IconComponent = opt.icon;
                 const isSelected = selectedReason === opt.label;
                 return (
                   <TouchableOpacity
@@ -696,6 +865,11 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                       isSelected && styles.modalReasonChipSelected,
                     ]}
                     onPress={() => setSelectedReason(opt.label)}>
+                    <IconComponent
+                      size={14}
+                      color={isSelected ? '#0F4C5C' : '#64748B'}
+                      style={styles.modalReasonIcon}
+                    />
                     <Text
                       style={[
                         styles.modalReasonText,
@@ -704,7 +878,11 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
                       {opt.label}
                     </Text>
                     {isSelected && (
-                      <Check size={13} color="#0F4C5C" style={styles.checkIcon} />
+                      <Check
+                        size={13}
+                        color="#0F4C5C"
+                        style={styles.checkIcon}
+                      />
                     )}
                   </TouchableOpacity>
                 );
@@ -751,7 +929,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.exportBtn}
           activeOpacity={0.8}
-          onPress={() => { }}>
+          onPress={handleShareItinerary}>
           <Share2 size={18} color="#FFFFFF" style={styles.barIcon} />
           <Text style={styles.exportBtnText}>Share Plan</Text>
         </TouchableOpacity>
@@ -764,7 +942,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAF8',
-
   },
   scrollContent: {
     paddingBottom: 110,
@@ -774,7 +951,6 @@ const styles = StyleSheet.create({
   heroBackground: {
     width: '100%',
     height: 340,
-
   },
   heroOverlay: {
     flex: 1,
@@ -786,7 +962,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 10,
-
   },
   topNavRow: {
     flexDirection: 'row',
@@ -805,6 +980,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  circleNavBtnActive: {
+    backgroundColor: '#FF6B4A',
   },
   heroBottomContent: {
     paddingBottom: 36,
@@ -831,7 +1009,6 @@ const styles = StyleSheet.create({
     fontSize: fp(1.1),
     fontWeight: '700',
     letterSpacing: 0.8,
-
   },
   tierPill: {
     backgroundColor: 'rgba(15, 76, 92, 0.75)',
@@ -846,6 +1023,20 @@ const styles = StyleSheet.create({
     fontSize: fp(1.1),
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  offlinePill: {
+    backgroundColor: '#0F4C5C',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#38BDF8',
+  },
+  offlinePillText: {
+    color: '#38BDF8',
+    fontSize: fp(1.05),
+    fontWeight: '700',
+    letterSpacing: 0.6,
   },
   heroTitle: {
     fontSize: fp(3.2),
@@ -869,7 +1060,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingHorizontal: 18,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
+    shadowOffset: {width: 0, height: -3},
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 8,
@@ -884,7 +1075,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.08)',
     shadowColor: '#0F4C5C',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
@@ -1004,7 +1195,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F4C5C',
     borderColor: '#0F4C5C',
     shadowColor: '#0F4C5C',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
@@ -1039,7 +1230,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.1)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
@@ -1091,7 +1282,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.06)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1219,6 +1410,16 @@ const styles = StyleSheet.create({
   costValue: {
     fontSize: fp(1.3),
     fontWeight: '700',
+    color: '#0F4C5C',
+  },
+  cardFooterRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  viewDetailsText: {
+    fontSize: fp(1.2),
+    fontWeight: '600',
     color: '#0F4C5C',
   },
 
@@ -1374,6 +1575,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#E6F4F1',
     borderColor: '#0F4C5C',
   },
+  modalReasonIcon: {
+    marginRight: 6,
+  },
   modalReasonText: {
     fontSize: fp(1.25),
     fontWeight: '500',
@@ -1405,7 +1609,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#0F4C5C',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 3,
@@ -1434,7 +1638,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: {width: 0, height: -4},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 10,
@@ -1467,7 +1671,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     shadowColor: '#FF6B4A',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 4,

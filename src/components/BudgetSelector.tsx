@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {Wallet, CreditCard, Gem} from 'lucide-react-native';
 import {colors} from '../theme/colors';
 import {spacing} from '../theme/spacing';
 import {typography} from '../theme/typography';
@@ -15,32 +16,36 @@ export const BudgetSelector: React.FC<BudgetSelectorProps> = ({
   selectedBudget,
   onSelect,
 }) => {
-  const options: {label: string; value: Budget}[] = [
-    {label: 'Low', value: 'low'},
-    {label: 'Medium', value: 'medium'},
-    {label: 'High', value: 'high'},
+  const options: {
+    label: string;
+    value: Budget;
+    icon: any;
+  }[] = [
+    {label: 'Low', value: 'low', icon: Wallet},
+    {label: 'Medium', value: 'medium', icon: CreditCard},
+    {label: 'High', value: 'high', icon: Gem},
   ];
 
   return (
     <View style={styles.container}>
-      {options.map(option => (
-        <TouchableOpacity
-          key={option.value}
-          style={[
-            styles.option,
-            selectedBudget === option.value && styles.selectedOption,
-          ]}
-          onPress={() => onSelect(option.value)}
-          activeOpacity={0.8}>
-          <Text
-            style={[
-              styles.text,
-              selectedBudget === option.value && styles.selectedText,
-            ]}>
-            {option.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+      {options.map(option => {
+        const isSelected = selectedBudget === option.value;
+        const IconComponent = option.icon;
+        const iconColor = isSelected ? '#FFFFFF' : colors.textSecondary;
+
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={[styles.option, isSelected && styles.selectedOption]}
+            onPress={() => onSelect(option.value)}
+            activeOpacity={0.8}>
+            <IconComponent size={16} color={iconColor} style={styles.icon} />
+            <Text style={[styles.text, isSelected && styles.selectedText]}>
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
@@ -54,9 +59,14 @@ const styles = StyleSheet.create({
   },
   option: {
     flex: 1,
-    paddingVertical: spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: spacing.sm,
     borderRadius: 8,
+  },
+  icon: {
+    marginRight: 6,
   },
   selectedOption: {
     backgroundColor: '#0F4C5C',

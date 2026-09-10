@@ -13,6 +13,7 @@ import {
   Clock,
   MapPin,
   Compass,
+  Lightbulb,
 } from 'lucide-react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import Animated, {
@@ -317,10 +318,13 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
             />
           </View>
 
-          <Text style={styles.proTipText}>
-            💡 Pro tip: Real-time weather context is included. You can "Swap"
-            any stop dynamically!
-          </Text>
+          <View style={styles.proTipRow}>
+            <Lightbulb size={13} color="#FF6B4A" style={styles.proTipIcon} />
+            <Text style={styles.proTipText}>
+              Pro tip: Real-time weather context is included. You can "Swap"
+              any stop dynamically!
+            </Text>
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -597,10 +601,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6B4A',
     borderRadius: 3,
   },
+  proTipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+  },
+  proTipIcon: {
+    marginTop: 1,
+  },
   proTipText: {
     fontSize: fp(1.2),
     color: 'rgba(255, 255, 255, 0.65)',
     textAlign: 'center',
     lineHeight: 18,
+    flexShrink: 1,
   },
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   ImageBackground,
   TouchableOpacity,
   StatusBar,
+  Share,
+  Alert,
 } from 'react-native';
 import {fp} from '../utils/responsive';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -15,6 +17,7 @@ import {RootStackParamList} from '../navigation/types';
 import {
   ChevronLeft,
   Share2,
+  Bookmark,
   Calendar,
   Wallet,
   MapPin,
@@ -28,8 +31,10 @@ import {
   ShoppingBag,
   RotateCcw,
 } from 'lucide-react-native';
-import {useSelector} from 'react-redux';
-import {RootState} from '../store';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../store';
+import {saveTrip, deleteTrip} from '../store/savedTripsSlice';
+import {SavedTrip} from '../services/storageService';
 import {MapRoute} from '../components/MapRoute';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TripSummary'>;
@@ -100,42 +105,128 @@ const getEstimatedBudget = (
   return `$${min} - $${max}`;
 };
 
-export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
+export const TripSummaryScreen: React.FC<Props> = ({route, navigation}) => {
+  const dispatch = useDispatch<AppDispatch>();
   const {currentItinerary, weather} = useSelector(
     (state: RootState) => state.itinerary,
   );
   const {budget, destination, days} = useSelector(
     (state: RootState) => state.trip,
   );
+  const {trips: savedTrips} = useSelector(
+    (state: RootState) => state.savedTrips,
+  );
 
-  const displayDestination = currentItinerary?.destination || destination || 'Your Destination';
+  const displayDestination =
+    currentItinerary?.destination || destination || 'Your Destination';
   const cityName = displayDestination.split(',')[0].trim();
   const numDays = currentItinerary?.days?.length || days || 5;
-
-  const allActivities = currentItinerary
-    ? currentItinerary.days.flatMap((d: any) => d.activities)
-    : [];
 
   const heroImageUrl = getDestinationImage(displayDestination);
   const estCostStr = getEstimatedBudget(budget || 'mid', numDays);
 
+  const allActivities = useMemo(
+    () =>
+      currentItinerary
+        ? currentItinerary.days.flatMap((d: any) => d.activities)
+        : [],
+    [currentItinerary],
+  );
+
   // Category breakdown
-  const categoryCounts: Record<string, number> = {};
-  allActivities.forEach((a: any) => {
-    const cat = a.category || 'other';
-    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-  });
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allActivities.forEach((a: any) => {
+      const cat = a.category || 'other';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [allActivities]);
+
+  const isBookmarked = useMemo(() => {
+    return savedTrips.some(
+      t =>
+        (route.params?.tripId && t.id === route.params.tripId) ||
+        t.destination.trim().toLowerCase() ===
+          displayDestination.trim().toLowerCase(),
+    );
+  }, [savedTrips, route.params?.tripId, displayDestination]);
+
+  const handleToggleBookmark = () => {
+    const existing = savedTrips.find(
+      t =>
+        (route.params?.tripId && t.id === route.params.tripId) ||
+        t.destination.trim().toLowerCase() ===
+          displayDestination.trim().toLowerCase(),
+    );
+
+    if (existing) {
+      dispatch(deleteTrip(existing.id));
+      Alert.alert(
+        'Trip Removed',
+        'Removed from your offline saved trips collection.',
+      );
+    } else if (currentItinerary) {
+      const newTrip: SavedTrip = {
+        id: route.params?.tripId || `trip_${Date.now()}`,
+        title: `${cityName} Journey`,
+        destination: displayDestination,
+        dates: `${numDays} Days Plan`,
+        duration: `${numDays} days`,
+        status: 'UPCOMING',
+        imageUrl: heroImageUrl,
+        itinerary: currentItinerary,
+        weather: weather,
+        savedAt: Date.now(),
+        budget: budget || 'mid',
+      };
+      dispatch(saveTrip(newTrip));
+      Alert.alert(
+        'Trip Saved!',
+        'This itinerary is now stored offline on your device.',
+      );
+    }
+  };
+
+  const handleShareTrip = async () => {
+    try {
+      let shareMsg = `${cityName} Journey (${numDays} Days)\nDestination: ${displayDestination}\nEstimated Budget: ${estCostStr}\n\n`;
+      if (currentItinerary) {
+        currentItinerary.days.forEach(d => {
+          shareMsg += `Day ${d.day}:\n`;
+          d.activities.forEach(a => {
+            shareMsg += `• ${a.time}: ${a.name} (${a.location})\n`;
+          });
+          shareMsg += '\n';
+        });
+      }
+      shareMsg += 'Handcrafted with ItinerAI';
+
+      await Share.share({
+        message: shareMsg,
+        title: `${cityName} Journey`,
+      });
+    } catch (err) {
+      console.warn('Share error:', err);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar
+        barStyle="light-content"
+        translucent
+        backgroundColor="transparent"
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         bounces={false}
         showsVerticalScrollIndicator={false}>
         {/* Editorial Destination Hero */}
-        <ImageBackground source={{uri: heroImageUrl}} style={styles.heroBackground}>
+        <ImageBackground
+          source={{uri: heroImageUrl}}
+          style={styles.heroBackground}>
           <View style={styles.heroShading}>
             {/* Top Navigation Bar */}
             <SafeAreaView style={styles.topNavSafeArea}>
@@ -146,9 +237,28 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
                   <ChevronLeft color="#FFFFFF" size={22} />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.navIconButton}>
-                  <Share2 color="#FFFFFF" size={18} />
-                </TouchableOpacity>
+                <View style={styles.topNavRight}>
+                  <TouchableOpacity
+                    style={[
+                      styles.navIconButton,
+                      isBookmarked && styles.navIconButtonActive,
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={handleToggleBookmark}>
+                    <Bookmark
+                      color="#FFFFFF"
+                      size={18}
+                      fill={isBookmarked ? '#FFFFFF' : 'none'}
+                    />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.navIconButton}
+                    activeOpacity={0.8}
+                    onPress={handleShareTrip}>
+                    <Share2 color="#FFFFFF" size={18} />
+                  </TouchableOpacity>
+                </View>
               </View>
             </SafeAreaView>
 
@@ -156,16 +266,28 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
             <View style={styles.heroContent}>
               <View style={styles.heroBadgeRow}>
                 <View style={styles.heroPill}>
-                  <MapPin size={11} color="#FF6B4A" style={styles.heroPillIcon} />
+                  <MapPin
+                    size={11}
+                    color="#FF6B4A"
+                    style={styles.heroPillIcon}
+                  />
                   <Text style={styles.heroPillText}>ITINERARY GENERATED</Text>
                 </View>
 
                 {weather && (
                   <View style={styles.weatherHeroPill}>
                     {weather.condition.toLowerCase().includes('rain') ? (
-                      <CloudRain size={11} color="#38BDF8" style={styles.heroPillIcon} />
+                      <CloudRain
+                        size={11}
+                        color="#38BDF8"
+                        style={styles.heroPillIcon}
+                      />
                     ) : (
-                      <Sun size={11} color="#F59E0B" style={styles.heroPillIcon} />
+                      <Sun
+                        size={11}
+                        color="#F59E0B"
+                        style={styles.heroPillIcon}
+                      />
                     )}
                     <Text style={styles.weatherHeroText}>
                       {weather.temp}°C • {weather.condition}
@@ -176,7 +298,8 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
 
               <Text style={styles.heroTitle}>{cityName} Journey</Text>
               <Text style={styles.heroSubtitle}>
-                {numDays} Days • {budget.toUpperCase()} Tier • Handcrafted with Gemini AI
+                {numDays} Days • {budget.toUpperCase()} Tier • Handcrafted with
+                Gemini AI
               </Text>
             </View>
           </View>
@@ -200,7 +323,9 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
               </View>
               <Text style={styles.statLabel}>TOTAL STOPS</Text>
               <Text style={styles.statValue}>
-                {allActivities.length > 0 ? `${allActivities.length} Spots` : `${numDays * 3} Spots`}
+                {allActivities.length > 0
+                  ? `${allActivities.length} Spots`
+                  : `${numDays * 3} Spots`}
               </Text>
             </View>
 
@@ -228,51 +353,62 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
               activeOpacity={0.8}
               onPress={() => navigation.navigate('ItineraryDetail')}>
               <Text style={styles.mapOverlayText}>Tap to explore route</Text>
-              <ArrowRight size={14} color="#0F4C5C" style={styles.mapOverlayIcon} />
+              <ArrowRight
+                size={14}
+                color="#0F4C5C"
+                style={styles.mapOverlayIcon}
+              />
             </TouchableOpacity>
           </View>
 
           {/* Daily Schedule Breakdown */}
-          {currentItinerary && currentItinerary.days && currentItinerary.days.length > 0 && (
-            <View style={styles.timelineSection}>
-              <Text style={styles.sectionTitle}>Daily Roadmap</Text>
+          {currentItinerary &&
+            currentItinerary.days &&
+            currentItinerary.days.length > 0 && (
+              <View style={styles.timelineSection}>
+                <Text style={styles.sectionTitle}>Daily Roadmap</Text>
 
-              <View style={styles.daysList}>
-                {currentItinerary.days.slice(0, 3).map(dayObj => (
-                  <TouchableOpacity
-                    key={dayObj.day}
-                    style={styles.dayRowCard}
-                    activeOpacity={0.7}
-                    onPress={() => navigation.navigate('ItineraryDetail')}>
-                    <View style={styles.dayNumberPill}>
-                      <Text style={styles.dayNumberText}>DAY {dayObj.day}</Text>
-                    </View>
+                <View style={styles.daysList}>
+                  {currentItinerary.days.slice(0, 3).map(dayObj => (
+                    <TouchableOpacity
+                      key={dayObj.day}
+                      style={styles.dayRowCard}
+                      activeOpacity={0.7}
+                      onPress={() => navigation.navigate('ItineraryDetail')}>
+                      <View style={styles.dayNumberPill}>
+                        <Text style={styles.dayNumberText}>
+                          DAY {dayObj.day}
+                        </Text>
+                      </View>
 
-                    <View style={styles.dayDetailsCol}>
-                      <Text style={styles.dayStopsHeading}>
-                        {dayObj.activities.length} Stops Planned
+                      <View style={styles.dayDetailsCol}>
+                        <Text style={styles.dayStopsHeading}>
+                          {dayObj.activities.length} Stops Planned
+                        </Text>
+                        <Text
+                          style={styles.dayActivitiesSnippet}
+                          numberOfLines={1}>
+                          {dayObj.activities.map(a => a.name).join(' • ')}
+                        </Text>
+                      </View>
+
+                      <ArrowRight size={16} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  ))}
+
+                  {currentItinerary.days.length > 3 && (
+                    <TouchableOpacity
+                      style={styles.seeAllDaysBtn}
+                      onPress={() => navigation.navigate('ItineraryDetail')}>
+                      <Text style={styles.seeAllDaysText}>
+                        + View remaining {currentItinerary.days.length - 3} days
+                        in full schedule
                       </Text>
-                      <Text style={styles.dayActivitiesSnippet} numberOfLines={1}>
-                        {dayObj.activities.map(a => a.name).join(' • ')}
-                      </Text>
-                    </View>
-
-                    <ArrowRight size={16} color="#9CA3AF" />
-                  </TouchableOpacity>
-                ))}
-
-                {currentItinerary.days.length > 3 && (
-                  <TouchableOpacity
-                    style={styles.seeAllDaysBtn}
-                    onPress={() => navigation.navigate('ItineraryDetail')}>
-                    <Text style={styles.seeAllDaysText}>
-                      + View remaining {currentItinerary.days.length - 3} days in full schedule
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-            </View>
-          )}
+            )}
 
           {/* Category Experience Chips */}
           <View style={styles.categoriesSection}>
@@ -304,7 +440,11 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
               )}
               {categoryCounts.shopping && (
                 <View style={styles.categoryChip}>
-                  <ShoppingBag size={13} color="#F59E0B" style={styles.chipIcon} />
+                  <ShoppingBag
+                    size={13}
+                    color="#F59E0B"
+                    style={styles.chipIcon}
+                  />
                   <Text style={styles.categoryChipText}>
                     {categoryCounts.shopping} Boutiques & Markets
                   </Text>
@@ -319,7 +459,9 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
               style={styles.primaryCtaButton}
               activeOpacity={0.8}
               onPress={() => navigation.navigate('ItineraryDetail')}>
-              <Text style={styles.primaryCtaText}>View Full Schedule & Maps</Text>
+              <Text style={styles.primaryCtaText}>
+                View Full Schedule & Maps
+              </Text>
               <ArrowRight color="#FFFFFF" size={18} style={styles.btnIcon} />
             </TouchableOpacity>
 
@@ -327,7 +469,9 @@ export const TripSummaryScreen: React.FC<Props> = ({navigation}) => {
               style={styles.secondaryTextButton}
               onPress={() => navigation.navigate('MainTabs', {screen: 'Plan'})}>
               <RotateCcw size={14} color="#6B7280" style={styles.btnIcon} />
-              <Text style={styles.secondaryText}>Modify preferences or destination</Text>
+              <Text style={styles.secondaryText}>
+                Modify preferences or destination
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -371,6 +515,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  navIconButtonActive: {
+    backgroundColor: '#FF6B4A',
+  },
+  topNavRight: {
+    flexDirection: 'row',
+    gap: 10,
   },
   heroContent: {
     paddingHorizontal: 22,
