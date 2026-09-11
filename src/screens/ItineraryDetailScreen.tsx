@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -15,16 +15,20 @@ import {
   Share,
   Alert,
 } from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../navigation/types';
-import {useDispatch, useSelector} from 'react-redux';
-import {AppDispatch, RootState} from '../store';
-import {fetchWeatherForTrip, pivotActivity} from '../store/itinerarySlice';
-import {saveTrip, deleteTrip} from '../store/savedTripsSlice';
-import {SavedTrip} from '../services/storageService';
-import {getWeatherTip} from '../services/weatherService';
-import {MapRoute} from '../components/MapRoute';
-import {Activity, Itinerary} from '../types/trip';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../store';
+import {
+  fetchWeatherForTrip,
+  pivotActivity,
+  optimizeDay,
+} from '../store/itinerarySlice';
+import { saveTrip, deleteTrip } from '../store/savedTripsSlice';
+import { SavedTrip } from '../services/storageService';
+import { getWeatherTip } from '../services/weatherService';
+import { MapRoute } from '../components/MapRoute';
+import { Activity, Itinerary, DayOptimizationPreset } from '../types/trip';
 import {
   ChevronLeft,
   Share2,
@@ -49,8 +53,9 @@ import {
   Footprints,
   Coins,
   UtensilsCrossed,
+  Luggage,
 } from 'lucide-react-native';
-import {fp} from '../utils/responsive';
+import { fp } from '../utils/responsive';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ItineraryDetail'>;
 
@@ -112,7 +117,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'R. de Belém 84-92, 1300-085 Lisboa',
           estimatedCost: '€10-15',
           category: 'food',
-          coordinates: {latitude: 38.6975, longitude: -9.2032},
+          coordinates: { latitude: 38.6975, longitude: -9.2032 },
         },
         {
           name: 'Jerónimos Monastery',
@@ -122,7 +127,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Praça do Império 1400-206 Lisboa',
           estimatedCost: '€12',
           category: 'landmark',
-          coordinates: {latitude: 38.6979, longitude: -9.2066},
+          coordinates: { latitude: 38.6979, longitude: -9.2066 },
         },
         {
           name: 'Miradouro de Santa Catarina',
@@ -132,7 +137,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'R. de Santa Catarina, 1200-012 Lisboa',
           estimatedCost: 'Free',
           category: 'nature',
-          coordinates: {latitude: 38.7107, longitude: -9.1485},
+          coordinates: { latitude: 38.7107, longitude: -9.1485 },
         },
         {
           name: 'Bairro Alto Dining & Fado',
@@ -142,7 +147,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Bairro Alto, Lisboa',
           estimatedCost: '€30-45',
           category: 'nightlife',
-          coordinates: {latitude: 38.7126, longitude: -9.1444},
+          coordinates: { latitude: 38.7126, longitude: -9.1444 },
         },
       ],
     },
@@ -157,7 +162,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'R. de Santa Cruz do Castelo, 1100-129 Lisboa',
           estimatedCost: '€15',
           category: 'landmark',
-          coordinates: {latitude: 38.7139, longitude: -9.1335},
+          coordinates: { latitude: 38.7139, longitude: -9.1335 },
         },
         {
           name: 'Time Out Market',
@@ -167,7 +172,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Av. 24 de Julho 49, 1200-479 Lisboa',
           estimatedCost: '€18-25',
           category: 'food',
-          coordinates: {latitude: 38.7071, longitude: -9.146},
+          coordinates: { latitude: 38.7071, longitude: -9.146 },
         },
         {
           name: 'Avenida da Liberdade',
@@ -177,7 +182,7 @@ const FALLBACK_ITINERARY: Itinerary = {
           location: 'Av. da Liberdade, Lisboa',
           estimatedCost: 'Varies',
           category: 'shopping',
-          coordinates: {latitude: 38.7205, longitude: -9.1465},
+          coordinates: { latitude: 38.7205, longitude: -9.1465 },
         },
       ],
     },
@@ -191,19 +196,53 @@ interface ReasonOption {
 }
 
 const REASON_OPTIONS: ReasonOption[] = [
-  {id: 'indoor', label: 'Indoor alternative (Rain-safe)', icon: CloudRain},
-  {id: 'budget', label: 'Budget-friendly pick', icon: Coins},
-  {id: 'relaxed', label: 'Less walking / Relaxed', icon: Footprints},
-  {id: 'food', label: 'Food & cafe spot', icon: UtensilsCrossed},
-  {id: 'surprise', label: 'Surprise alternative', icon: Sparkles},
+  { id: 'indoor', label: 'Indoor alternative (Rain-safe)', icon: CloudRain },
+  { id: 'budget', label: 'Budget-friendly pick', icon: Coins },
+  { id: 'relaxed', label: 'Less walking / Relaxed', icon: Footprints },
+  { id: 'food', label: 'Food & cafe spot', icon: UtensilsCrossed },
+  { id: 'surprise', label: 'Surprise alternative', icon: Sparkles },
 ];
 
-export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
+interface PresetOption {
+  id: DayOptimizationPreset;
+  label: string;
+  desc: string;
+}
+
+const OPTIMIZE_PRESETS: PresetOption[] = [
+  {
+    id: 'relaxed',
+    label: 'Relaxed & Leisurely',
+    desc: 'Fewer stops, unhurried pacing & peaceful cafes',
+  },
+  {
+    id: 'foodie',
+    label: 'Food & Culinary Focus',
+    desc: 'Artisan food markets, bakeries & dinner gems',
+  },
+  {
+    id: 'efficient_transit',
+    label: 'Efficient Transit Route',
+    desc: 'Clustered stops, minimal transit & easy walks',
+  },
+  {
+    id: 'rain_protocol',
+    label: 'Rainy Day Protocol',
+    desc: 'All-indoor world-class museums & covered arcades',
+  },
+];
+
+export const ItineraryDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const {currentItinerary, weather, weatherLoading, pivotingActivity} =
-    useSelector((state: RootState) => state.itinerary);
-  const {budget} = useSelector((state: RootState) => state.trip);
-  const {trips: savedTrips} = useSelector(
+  const {
+    currentItinerary,
+    weather,
+    weatherLoading,
+    pivotingActivity,
+    optimizingDay,
+  } = useSelector((state: RootState) => state.itinerary);
+  const { budget } = useSelector((state: RootState) => state.trip);
+  const { trips: savedTrips } = useSelector(
     (state: RootState) => state.savedTrips,
   );
   const [activeDayIndex, setActiveDayIndex] = useState(0);
@@ -217,6 +256,12 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
     'Indoor alternative (Rain-safe)',
   );
   const [customReason, setCustomReason] = useState<string>('');
+
+  // Day Optimization states
+  const [optimizeModalVisible, setOptimizeModalVisible] = useState(false);
+  const [selectedPreset, setSelectedPreset] =
+    useState<DayOptimizationPreset>('relaxed');
+  const [customPromptText, setCustomPromptText] = useState('');
 
   const displayItinerary: Itinerary = currentItinerary || FALLBACK_ITINERARY;
   const isMock = !currentItinerary;
@@ -232,7 +277,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
       t =>
         (route.params?.tripId && t.id === route.params.tripId) ||
         t.destination.trim().toLowerCase() ===
-          destinationStr.trim().toLowerCase(),
+        destinationStr.trim().toLowerCase(),
     );
   }, [savedTrips, route.params?.tripId, destinationStr]);
 
@@ -241,7 +286,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
       t =>
         (route.params?.tripId && t.id === route.params.tripId) ||
         t.destination.trim().toLowerCase() ===
-          destinationStr.trim().toLowerCase(),
+        destinationStr.trim().toLowerCase(),
     );
 
     if (existing) {
@@ -283,9 +328,8 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
       displayItinerary.days.forEach(day => {
         shareText += `DAY ${day.day}\n`;
         day.activities.forEach(act => {
-          shareText += `  • ${act.time} - ${
-            act.name
-          } (${act.category.toUpperCase()})\n`;
+          shareText += `  • ${act.time} - ${act.name
+            } (${act.category.toUpperCase()})\n`;
           shareText += `    Location: ${act.location}\n`;
           if (act.estimatedCost) {
             shareText += `    Cost: ${act.estimatedCost}\n`;
@@ -313,7 +357,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
     )?.coordinates;
 
     if (!weather && !weatherLoading) {
-      dispatch(fetchWeatherForTrip({destination, coordinates: firstCoord}));
+      dispatch(fetchWeatherForTrip({ destination, coordinates: firstCoord }));
     }
   }, [dispatch, displayItinerary, weather, weatherLoading]);
 
@@ -370,18 +414,18 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
   const getCategoryTagStyle = (category: string) => {
     switch (category) {
       case 'food':
-        return {backgroundColor: '#FFF1F2', color: '#E11D48'};
+        return { backgroundColor: '#FFF1F2', color: '#E11D48' };
       case 'landmark':
-        return {backgroundColor: '#EFF6FF', color: '#2563EB'};
+        return { backgroundColor: '#EFF6FF', color: '#2563EB' };
       case 'nature':
-        return {backgroundColor: '#ECFDF5', color: '#059669'};
+        return { backgroundColor: '#ECFDF5', color: '#059669' };
       case 'nightlife':
-        return {backgroundColor: '#F5F3FF', color: '#7C3AED'};
+        return { backgroundColor: '#F5F3FF', color: '#7C3AED' };
       case 'shopping':
-        return {backgroundColor: '#FFFBEB', color: '#D97706'};
+        return { backgroundColor: '#FFFBEB', color: '#D97706' };
       case 'other':
       default:
-        return {backgroundColor: '#E6F4F1', color: '#0F4C5C'};
+        return { backgroundColor: '#E6F4F1', color: '#0F4C5C' };
     }
   };
 
@@ -439,7 +483,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
         contentContainerStyle={styles.scrollContent}>
         {/* Editorial Destination Hero */}
         <ImageBackground
-          source={{uri: heroImageUrl}}
+          source={{ uri: heroImageUrl }}
           style={styles.heroBackground}>
           <View style={styles.heroOverlay}>
             <SafeAreaView style={styles.heroSafeArea}>
@@ -452,6 +496,19 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
                 </TouchableOpacity>
 
                 <View style={styles.topNavRight}>
+                  <TouchableOpacity
+                    style={styles.circleNavBtn}
+                    activeOpacity={0.8}
+                    onPress={() =>
+                      navigation.navigate('TripInsights', {
+                        tripId: route.params?.tripId,
+                        destination: destinationStr,
+                        daysCount,
+                        budget,
+                      })
+                    }>
+                    <Luggage size={18} color="#FFFFFF" />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={[
                       styles.circleNavBtn,
@@ -632,13 +689,33 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
           {/* Connected Day Timeline Schedule */}
           <View style={styles.timelineSection}>
             <View style={styles.timelineHeaderRow}>
-              <Text style={styles.sectionHeading}>
-                Day {activeDayIndex + 1} Schedule
-              </Text>
-              <Text style={styles.sectionStopsCount}>
-                {currentDayActivities.length} Stops Planned
-              </Text>
+              <View>
+                <Text style={styles.sectionHeading}>
+                  Day {activeDayIndex + 1} Schedule
+                </Text>
+                <Text style={styles.sectionStopsCount}>
+                  {currentDayActivities.length} Stops Planned
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.optimizeDayBtn}
+                activeOpacity={0.8}
+                disabled={optimizingDay}
+                onPress={() => setOptimizeModalVisible(true)}>
+                <Sparkles size={13} color="#0F4C5C" />
+                <Text style={styles.optimizeDayBtnText}>Optimize Day</Text>
+              </TouchableOpacity>
             </View>
+
+            {optimizingDay && (
+              <View style={styles.optimizingDayBanner}>
+                <ActivityIndicator size="small" color="#0F4C5C" />
+                <Text style={styles.optimizingDayText}>
+                  Gemini is re-planning Day {activeDayIndex + 1}...
+                </Text>
+              </View>
+            )}
 
             <View style={styles.timelineList}>
               {currentDayActivities.map((activity, index) => {
@@ -687,13 +764,13 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
                         <View
                           style={[
                             styles.categoryBadge,
-                            {backgroundColor: tagStyle.backgroundColor},
+                            { backgroundColor: tagStyle.backgroundColor },
                           ]}>
                           {renderCategoryIcon(activity.category)}
                           <Text
                             style={[
                               styles.categoryBadgeText,
-                              {color: tagStyle.color},
+                              { color: tagStyle.color },
                             ]}>
                             {activity.category.toUpperCase()}
                           </Text>
@@ -758,7 +835,7 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
                           <ChevronLeft
                             size={13}
                             color="#0F4C5C"
-                            style={{transform: [{rotate: '180deg'}]}}
+                            style={{ transform: [{ rotate: '180deg' }] }}
                           />
                         </View>
                       </View>
@@ -916,6 +993,137 @@ export const ItineraryDetailScreen: React.FC<Props> = ({route, navigation}) => {
         </Pressable>
       </Modal>
 
+      {/* Interactive Day Optimization Bottom Sheet Modal */}
+      <Modal
+        visible={optimizeModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setOptimizeModalVisible(false)}>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setOptimizeModalVisible(false)}>
+          <Pressable
+            style={styles.modalSheet}
+            onPress={e => e.stopPropagation()}>
+            <View style={styles.modalHandle} />
+
+            <View style={styles.modalHeader}>
+              <View style={styles.modalTitleCol}>
+                <View style={styles.modalTitleRow}>
+                  <Sparkles
+                    size={18}
+                    color="#FF6B4A"
+                    style={styles.modalSparklesIcon}
+                  />
+                  <Text style={styles.modalTitle}>
+                    Optimize Day {activeDayIndex + 1}
+                  </Text>
+                </View>
+                <Text style={styles.modalSubtitle}>
+                  Reshape this full day's plan with AI
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setOptimizeModalVisible(false)}>
+                <X size={18} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Presets Grid */}
+            <Text style={styles.modalSectionLabel}>
+              Choose an optimization focus:
+            </Text>
+            <View style={styles.presetsContainer}>
+              {OPTIMIZE_PRESETS.map(preset => {
+                const isSelected = selectedPreset === preset.id;
+                return (
+                  <TouchableOpacity
+                    key={preset.id}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.presetCard,
+                      isSelected && styles.presetCardSelected,
+                    ]}
+                    onPress={() => setSelectedPreset(preset.id)}>
+                    <View style={styles.presetCardTop}>
+                      <Text
+                        style={[
+                          styles.presetLabel,
+                          isSelected && styles.presetLabelSelected,
+                        ]}>
+                        {preset.label}
+                      </Text>
+                      {isSelected && <Check size={14} color="#0F4C5C" />}
+                    </View>
+                    <Text style={styles.presetDesc}>{preset.desc}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Custom guidance */}
+            <Text style={styles.modalSectionLabel}>
+              Custom instructions (optional):
+            </Text>
+            <TextInput
+              style={styles.modalTextInput}
+              placeholder="e.g. Include a scenic sunset point or rooftop drinks"
+              placeholderTextColor="#9CA3AF"
+              value={customPromptText}
+              onChangeText={setCustomPromptText}
+              maxLength={150}
+            />
+
+            {/* Confirm Optimize Button */}
+            <TouchableOpacity
+              style={styles.modalConfirmBtn}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (route.params?.isOffline) {
+                  Alert.alert(
+                    'Offline Mode',
+                    'Day optimization requires an active internet connection to contact Gemini.',
+                  );
+                  return;
+                }
+                setOptimizeModalVisible(false);
+                dispatch(
+                  optimizeDay({
+                    dayIndex: activeDayIndex,
+                    preset: selectedPreset,
+                    customInstruction: customPromptText.trim() || undefined,
+                    fallbackItinerary: isMock ? FALLBACK_ITINERARY : undefined,
+                  }),
+                );
+              }}>
+              <Sparkles size={16} color="#FFFFFF" style={styles.confirmIcon} />
+              <Text style={styles.modalConfirmBtnText}>
+                Re-Plan Day with Gemini
+              </Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Floating Ask Copilot FAB */}
+      <TouchableOpacity
+        style={styles.copilotFab}
+        activeOpacity={0.85}
+        onPress={() =>
+          navigation.navigate('TripCopilot', {
+            tripId: route.params?.tripId,
+            destination: destinationStr,
+            daysCount,
+            budget,
+          })
+        }>
+        <View style={styles.copilotFabGlow}>
+          <Sparkles size={16} color="#FFFFFF" />
+        </View>
+        <Text style={styles.copilotFabText}>Ask Copilot</Text>
+      </TouchableOpacity>
+
       {/* Floating Bottom Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
@@ -1060,7 +1268,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingHorizontal: 18,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: -3},
+    shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 8,
@@ -1075,7 +1283,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.08)',
     shadowColor: '#0F4C5C',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
@@ -1195,7 +1403,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F4C5C',
     borderColor: '#0F4C5C',
     shadowColor: '#0F4C5C',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
@@ -1230,7 +1438,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.1)',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
@@ -1282,7 +1490,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.06)',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1609,7 +1817,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#0F4C5C',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 3,
@@ -1638,7 +1846,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: -4},
+    shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 10,
@@ -1671,7 +1879,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     shadowColor: '#FF6B4A',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 4,
@@ -1680,5 +1888,100 @@ const styles = StyleSheet.create({
     fontSize: fp(1.5),
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  optimizeDayBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4F1',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 5,
+    borderWidth: 1,
+    borderColor: '#BEE3DB',
+  },
+  optimizeDayBtnText: {
+    fontSize: fp(1.3),
+    fontWeight: '700',
+    color: '#0F4C5C',
+  },
+  optimizingDayBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4F1',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    gap: 8,
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  optimizingDayText: {
+    fontSize: fp(1.3),
+    color: '#0F4C5C',
+    fontWeight: '600',
+  },
+  presetsContainer: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  presetCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+  },
+  presetCardSelected: {
+    backgroundColor: '#E6F4F1',
+    borderColor: '#0F4C5C',
+  },
+  presetCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  presetLabel: {
+    fontSize: fp(1.4),
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  presetLabelSelected: {
+    color: '#0F4C5C',
+  },
+  presetDesc: {
+    fontSize: fp(1.2),
+    color: '#64748B',
+  },
+  copilotFab: {
+    position: 'absolute',
+    bottom: 104,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0F4C5C',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    gap: 8,
+    shadowColor: '#0F4C5C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  copilotFabGlow: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FF6B4A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copilotFabText: {
+    color: '#FFFFFF',
+    fontSize: fp(1.4),
+    fontWeight: '700',
   },
 });

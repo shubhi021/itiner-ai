@@ -21,4 +21,16 @@ export type RootStackParamList = {
         destination: string;
       }
     | undefined;
+  TripCopilot: {
+    tripId?: string;
+    destination: string;
+    daysCount?: number;
+    budget?: string;
+  };
+  TripInsights: {
+    tripId?: string;
+    destination: string;
+    daysCount?: number;
+    budget?: string;
+  };
 };

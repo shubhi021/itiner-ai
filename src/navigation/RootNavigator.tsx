@@ -13,6 +13,8 @@ import {LoadingScreen} from '../screens/LoadingScreen';
 import {TripSummaryScreen} from '../screens/TripSummaryScreen';
 import {ItineraryDetailScreen} from '../screens/ItineraryDetailScreen';
 import {ActivityDetailScreen} from '../screens/ActivityDetailScreen';
+import {TripCopilotScreen} from '../screens/TripCopilotScreen';
+import {TripInsightsScreen} from '../screens/TripInsightsScreen';
 
 // Icons
 import {Map, Bookmark, User} from 'lucide-react-native';
@@ -68,6 +70,8 @@ export const RootNavigator = () => {
       <Stack.Screen name="TripSummary" component={TripSummaryScreen} />
       <Stack.Screen name="ItineraryDetail" component={ItineraryDetailScreen} />
       <Stack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
+      <Stack.Screen name="TripCopilot" component={TripCopilotScreen} />
+      <Stack.Screen name="TripInsights" component={TripInsightsScreen} />
     </Stack.Navigator>
   );
 };

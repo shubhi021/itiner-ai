@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert, SafeAreaView } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { fp } from '../utils/responsive';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, Alert, SafeAreaView} from 'react-native';
+import {useSelector} from 'react-redux';
+import {RootState} from '../store';
+import {fp} from '../utils/responsive';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
 import {
   Globe,
   Plane,
@@ -15,7 +15,7 @@ import {
   Compass,
   Lightbulb,
 } from 'lucide-react-native';
-import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, {Circle, Defs, LinearGradient, Stop} from 'react-native-svg';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -29,11 +29,11 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Loading'>;
 
 const ORBIT_SIZE = 220;
 
-export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
-  const { destination, days, budget, interests } = useSelector(
+export const LoadingScreen: React.FC<Props> = ({navigation}) => {
+  const {destination, days, budget, interests} = useSelector(
     (state: RootState) => state.trip,
   );
-  const { loading, error, currentItinerary } = useSelector(
+  const {loading, error, currentItinerary} = useSelector(
     (state: RootState) => state.itinerary,
   );
 
@@ -77,10 +77,10 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
     displayPercent < 28
       ? 0
       : displayPercent < 58
-        ? 1
-        : displayPercent < 85
-          ? 2
-          : 3;
+      ? 1
+      : displayPercent < 85
+      ? 2
+      : 3;
 
   useEffect(() => {
     // Progress starts and advances naturally towards 92%
@@ -137,14 +137,14 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     if (!loading && currentItinerary) {
       setDisplayPercent(100);
-      progress.value = withTiming(1, { duration: 400 }, finished => {
+      progress.value = withTiming(1, {duration: 400}, finished => {
         if (finished) {
           runOnJS(navigation.replace)('TripSummary');
         }
       });
     } else if (!loading && error) {
       runOnJS(Alert.alert)('Generation Failed', error, [
-        { text: 'OK', onPress: () => navigation.goBack() },
+        {text: 'OK', onPress: () => navigation.goBack()},
       ]);
     }
   }, [loading, currentItinerary, error, navigation, progress]);
@@ -152,14 +152,14 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
   // Orbit rotation animation
   const orbitAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ rotate: `${orbitRotation.value}deg` }],
+      transform: [{rotate: `${orbitRotation.value}deg`}],
     };
   });
 
   // Pulse wave animation
   const pulseAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: pulseScale.value }],
+      transform: [{scale: pulseScale.value}],
       opacity: pulseOpacity.value,
     };
   });
@@ -321,8 +321,8 @@ export const LoadingScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.proTipRow}>
             <Lightbulb size={13} color="#FF6B4A" style={styles.proTipIcon} />
             <Text style={styles.proTipText}>
-              Pro tip: Real-time weather context is included. You can "Swap"
-              any stop dynamically!
+              Pro tip: Real-time weather context is included. You can "Swap" any
+              stop dynamically!
             </Text>
           </View>
         </View>
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#07242C',
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
   },
   safeArea: {
     flex: 1,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: '#FF6B4A',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.35,
     shadowRadius: 14,
     elevation: 8,
@@ -467,12 +467,7 @@ const styles = StyleSheet.create({
   },
   planeWrapper: {
     marginTop: -2,
-    shadowColor: '#FF6B4A',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 8,
-    elevation: 6,
-    transform: [{ rotate: '45deg' }],
+    transform: [{rotate: '45deg'}],
   },
   floatingTagLeft: {
     position: 'absolute',
@@ -517,7 +512,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 3,
