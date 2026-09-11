@@ -34,3 +34,67 @@ export type TripRequest = {
     customNote?: string;
   };
 };
+
+export type ChatRole = 'user' | 'model';
+
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  text: string;
+  timestamp: number;
+}
+
+export interface PackingItem {
+  id: string;
+  name: string;
+  category:
+    | 'Clothing'
+    | 'Tech & Adapters'
+    | 'Toiletries'
+    | 'Documents'
+    | 'Weather Gear'
+    | 'Other';
+  packed: boolean;
+  tip?: string;
+}
+
+export interface DestinationInsights {
+  tippingCulture: string;
+  transitTips: string[];
+  culturalEtiquette: {
+    dos: string[];
+    donts: string[];
+  };
+  emergencyNumbers: {
+    police: string;
+    ambulance: string;
+    general: string;
+  };
+  essentialPhrases: {
+    phrase: string;
+    translation: string;
+    pronunciation?: string;
+  }[];
+}
+
+export interface BudgetCategory {
+  category: string;
+  estimated: string;
+  percentage: number;
+  tip: string;
+}
+
+export interface BudgetForecast {
+  totalEstimated: string;
+  currency: string;
+  dailyAverage: string;
+  categories: BudgetCategory[];
+  moneySavingTips: string[];
+}
+
+export type DayOptimizationPreset =
+  | 'relaxed'
+  | 'foodie'
+  | 'efficient_transit'
+  | 'rain_protocol'
+  | 'custom';
