@@ -37,11 +37,27 @@ export type TripRequest = {
 
 export type ChatRole = 'user' | 'model';
 
+export type AgentActionType =
+  | 'add_activity'
+  | 'remove_activity'
+  | 'open_directions'
+  | 'toggle_packing';
+
+export interface AgentAction {
+  id: string;
+  type: AgentActionType;
+  title: string;
+  details?: string;
+  timestamp: number;
+  metadata?: Record<string, any>;
+}
+
 export interface ChatMessage {
   id: string;
   role: ChatRole;
   text: string;
   timestamp: number;
+  actions?: AgentAction[];
 }
 
 export interface PackingItem {
