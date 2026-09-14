@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import {createSlice, createAsyncThunk, PayloadAction} from '@reduxjs/toolkit';
 import {
   Itinerary,
   TripRequest,
@@ -16,8 +16,8 @@ import {
   generateDestinationInsights,
   generateBudgetForecast,
 } from '../services/llmService';
-import { WeatherData, getWeather } from '../services/weatherService';
-import { storageService } from '../services/storageService';
+import {WeatherData, getWeather} from '../services/weatherService';
+import {storageService} from '../services/storageService';
 
 export interface ItineraryState {
   currentItinerary: Itinerary | null;
@@ -25,7 +25,7 @@ export interface ItineraryState {
   error: string | null;
   weather: WeatherData | null;
   weatherLoading: boolean;
-  pivotingActivity: { dayIndex: number; activityIndex: number } | null;
+  pivotingActivity: {dayIndex: number; activityIndex: number} | null;
   isOfflineMode: boolean;
   optimizingDay: boolean;
   packingList: PackingItem[] | null;
@@ -55,7 +55,7 @@ const initialState: ItineraryState = {
 
 export const hydrateCachedItinerary = createAsyncThunk(
   'itinerary/hydrateCachedItinerary',
-  async (_, { rejectWithValue }) => {
+  async (_, {rejectWithValue}) => {
     try {
       const cached = await storageService.getCachedActiveItinerary();
       return cached;
@@ -69,7 +69,7 @@ export const hydrateCachedItinerary = createAsyncThunk(
 
 export const fetchItinerary = createAsyncThunk(
   'itinerary/fetchItinerary',
-  async (request: TripRequest, { rejectWithValue }) => {
+  async (request: TripRequest, {rejectWithValue}) => {
     try {
       const result = await generateItineraryService(request);
       // Auto-cache generated itinerary for offline access
@@ -89,9 +89,9 @@ export const fetchWeatherForTrip = createAsyncThunk(
   async (
     params: {
       destination: string;
-      coordinates?: { latitude: number; longitude: number };
+      coordinates?: {latitude: number; longitude: number};
     },
-    { rejectWithValue },
+    {rejectWithValue},
   ) => {
     try {
       // 1. Check local offline cache first (TTL 1 hour)
@@ -124,11 +124,11 @@ export interface PivotActivityArgs {
 
 export const pivotActivity = createAsyncThunk(
   'itinerary/pivotActivity',
-  async (args: PivotActivityArgs, { getState, rejectWithValue }) => {
+  async (args: PivotActivityArgs, {getState, rejectWithValue}) => {
     try {
       const state = getState() as {
         itinerary: ItineraryState;
-        trip: { budget: 'low' | 'mid' | 'high' };
+        trip: {budget: 'low' | 'mid' | 'high'};
       };
       const currentItinerary =
         state.itinerary.currentItinerary || args.fallbackItinerary;
@@ -178,11 +178,11 @@ export interface OptimizeDayArgs {
 
 export const optimizeDay = createAsyncThunk(
   'itinerary/optimizeDay',
-  async (args: OptimizeDayArgs, { getState, rejectWithValue }) => {
+  async (args: OptimizeDayArgs, {getState, rejectWithValue}) => {
     try {
       const state = getState() as {
         itinerary: ItineraryState;
-        trip: { budget: 'low' | 'mid' | 'high' };
+        trip: {budget: 'low' | 'mid' | 'high'};
       };
       const currentItinerary =
         state.itinerary.currentItinerary || args.fallbackItinerary;
@@ -229,7 +229,7 @@ export const fetchPackingList = createAsyncThunk(
       activities?: Activity[];
       forceRefresh?: boolean;
     },
-    { rejectWithValue },
+    {rejectWithValue},
   ) => {
     try {
       if (!params.forceRefresh) {
@@ -261,8 +261,8 @@ export const fetchPackingList = createAsyncThunk(
 export const fetchDestinationInsights = createAsyncThunk(
   'itinerary/fetchDestinationInsights',
   async (
-    params: { destination: string; forceRefresh?: boolean },
-    { rejectWithValue },
+    params: {destination: string; forceRefresh?: boolean},
+    {rejectWithValue},
   ) => {
     try {
       if (!params.forceRefresh) {
@@ -294,7 +294,7 @@ export const fetchBudgetForecast = createAsyncThunk(
       budgetTier: 'low' | 'mid' | 'high';
       forceRefresh?: boolean;
     },
-    { rejectWithValue },
+    {rejectWithValue},
   ) => {
     try {
       if (!params.forceRefresh) {
@@ -341,7 +341,7 @@ const itinerarySlice = createSlice({
     },
     togglePackingItem: (
       state,
-      action: PayloadAction<{ id: string; destination: string }>,
+      action: PayloadAction<{id: string; destination: string}>,
     ) => {
       if (state.packingList) {
         const item = state.packingList.find(i => i.id === action.payload.id);
@@ -356,6 +356,71 @@ const itinerarySlice = createSlice({
     },
     setPackingList: (state, action: PayloadAction<PackingItem[]>) => {
       state.packingList = action.payload;
+    },
+    addActivityToDay: (
+      state,
+      action: PayloadAction<{dayNumber: number; activity: Activity}>,
+    ) => {
+      if (!state.currentItinerary) {
+        return;
+      }
+      const dayIndex = action.payload.dayNumber - 1;
+      const day = state.currentItinerary.days[dayIndex];
+      if (day) {
+        day.activities.push(action.payload.activity);
+        storageService.cacheActiveItinerary({
+          itinerary: state.currentItinerary,
+          weather: state.weather,
+        });
+      }
+    },
+    removeActivityFromDay: (
+      state,
+      action: PayloadAction<{dayNumber: number; activityName: string}>,
+    ) => {
+      if (!state.currentItinerary) {
+        return;
+      }
+      const dayIndex = action.payload.dayNumber - 1;
+      const day = state.currentItinerary.days[dayIndex];
+      if (day) {
+        const query = action.payload.activityName.toLowerCase().trim();
+        day.activities = day.activities.filter(
+          a =>
+            !a.name.toLowerCase().includes(query) &&
+            !query.includes(a.name.toLowerCase()),
+        );
+        storageService.cacheActiveItinerary({
+          itinerary: state.currentItinerary,
+          weather: state.weather,
+        });
+      }
+    },
+    togglePackingItemByName: (
+      state,
+      action: PayloadAction<{
+        itemName: string;
+        isPacked: boolean;
+        destination?: string;
+      }>,
+    ) => {
+      if (state.packingList) {
+        const query = action.payload.itemName.toLowerCase().trim();
+        const item = state.packingList.find(
+          i =>
+            i.name.toLowerCase().includes(query) ||
+            query.includes(i.name.toLowerCase()),
+        );
+        if (item) {
+          item.packed = action.payload.isPacked;
+          if (action.payload.destination) {
+            storageService.saveCachedPackingList(
+              action.payload.destination,
+              state.packingList,
+            );
+          }
+        }
+      }
     },
     clearItinerary: state => {
       state.currentItinerary = null;
@@ -411,7 +476,7 @@ const itinerarySlice = createSlice({
       })
       .addCase(pivotActivity.fulfilled, (state, action) => {
         state.pivotingActivity = null;
-        const { dayIndex, activityIndex, activity, itineraryToInit } =
+        const {dayIndex, activityIndex, activity, itineraryToInit} =
           action.payload;
 
         if (itineraryToInit && !state.currentItinerary) {
@@ -439,7 +504,7 @@ const itinerarySlice = createSlice({
       })
       .addCase(optimizeDay.fulfilled, (state, action) => {
         state.optimizingDay = false;
-        const { dayIndex, activities, itineraryToInit } = action.payload;
+        const {dayIndex, activities, itineraryToInit} = action.payload;
 
         if (itineraryToInit && !state.currentItinerary) {
           state.currentItinerary = JSON.parse(JSON.stringify(itineraryToInit));
@@ -500,6 +565,9 @@ export const {
   setIsOfflineMode,
   togglePackingItem,
   setPackingList,
+  addActivityToDay,
+  removeActivityFromDay,
+  togglePackingItemByName,
   clearItinerary,
 } = itinerarySlice.actions;
 
