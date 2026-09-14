@@ -1,4 +1,9 @@
-import {GoogleGenerativeAI, Schema, SchemaType} from '@google/generative-ai';
+import {
+  GoogleGenerativeAI,
+  Schema,
+  SchemaType,
+  Tool,
+} from '@google/generative-ai';
 import {GEMINI_API_KEY} from '@env';
 import {
   TripRequest,
@@ -9,6 +14,7 @@ import {
   DestinationInsights,
   BudgetForecast,
   DayOptimizationPreset,
+  AgentAction,
 } from '../types/trip';
 
 let genAI: GoogleGenerativeAI | null = null;
@@ -256,6 +262,138 @@ const budgetForecastSchema: Schema = {
     'moneySavingTips',
   ],
 };
+
+// Define Gemini agent tools (function calling) for Copilot autonomous actions
+export const copilotTools: Tool[] = [
+  {
+    functionDeclarations: [
+      {
+        name: 'addActivityToSchedule',
+        description:
+          'Adds a new attraction, meal, stop, or activity to a specific day in the itinerary.',
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            dayNumber: {
+              type: SchemaType.INTEGER,
+              description:
+                'The 1-based day number (e.g. 1 for Day 1, 2 for Day 2).',
+            },
+            time: {
+              type: SchemaType.STRING,
+              description:
+                'Scheduled time of day, e.g. "03:30 PM" or "11:00 AM".',
+            },
+            name: {
+              type: SchemaType.STRING,
+              description:
+                'Name of the landmark, attraction, cafe, or restaurant.',
+            },
+            location: {
+              type: SchemaType.STRING,
+              description: 'Neighborhood, street address, or area name.',
+            },
+            description: {
+              type: SchemaType.STRING,
+              description:
+                'Short vivid summary of what to experience or do here.',
+            },
+            category: {
+              type: SchemaType.STRING,
+              description:
+                'Category: "food", "landmark", "nature", "nightlife", "shopping", or "other".',
+            },
+            estimatedCost: {
+              type: SchemaType.STRING,
+              description: 'Estimated cost, e.g. "€5 - €10", "Free", or "$15".',
+            },
+            latitude: {
+              type: SchemaType.NUMBER,
+              description:
+                'Approximate latitude coordinate for plotting on maps.',
+            },
+            longitude: {
+              type: SchemaType.NUMBER,
+              description:
+                'Approximate longitude coordinate for plotting on maps.',
+            },
+          },
+          required: [
+            'dayNumber',
+            'time',
+            'name',
+            'location',
+            'description',
+            'category',
+          ],
+        },
+      },
+      {
+        name: 'removeActivityFromSchedule',
+        description:
+          'Removes or cancels a scheduled stop or activity from a specific day in the itinerary.',
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            dayNumber: {
+              type: SchemaType.INTEGER,
+              description: 'The 1-based day number (e.g. 1 for Day 1).',
+            },
+            activityName: {
+              type: SchemaType.STRING,
+              description:
+                'The title or name of the activity/venue to remove (e.g. "Colosseum").',
+            },
+          },
+          required: ['dayNumber', 'activityName'],
+        },
+      },
+      {
+        name: 'openNavigationDirections',
+        description:
+          'Opens external native navigation (Apple Maps or Google Maps) to a landmark or venue.',
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            destinationName: {
+              type: SchemaType.STRING,
+              description: 'Name of the venue, restaurant, or landmark.',
+            },
+            latitude: {
+              type: SchemaType.NUMBER,
+              description: 'Optional latitude coordinate.',
+            },
+            longitude: {
+              type: SchemaType.NUMBER,
+              description: 'Optional longitude coordinate.',
+            },
+          },
+          required: ['destinationName'],
+        },
+      },
+      {
+        name: 'togglePackingItemStatus',
+        description:
+          'Marks a packing item as packed or unpacked in the trip packing checklist.',
+        parameters: {
+          type: SchemaType.OBJECT,
+          properties: {
+            itemName: {
+              type: SchemaType.STRING,
+              description:
+                'Name of the item to mark (e.g. "Passport", "Sunglasses", "Universal Adapter").',
+            },
+            isPacked: {
+              type: SchemaType.BOOLEAN,
+              description: 'True if item is packed, false if unpacked.',
+            },
+          },
+          required: ['itemName', 'isPacked'],
+        },
+      },
+    ],
+  },
+];
 
 interface ExecuteOptions {
   schema?: Schema;
@@ -572,59 +710,253 @@ export interface CopilotChatParams {
   itinerarySummary?: string;
   weatherSummary?: string;
   budget?: string;
+  onExecuteTool?: (action: AgentAction) => Promise<any> | any;
+}
+
+export interface CopilotChatResult {
+  replyText: string;
+  executedActions: AgentAction[];
 }
 
 /**
- * Conversational multi-turn travel assistant grounded in the active itinerary context
+ * Autonomous conversational travel concierge powered by Gemini Agent Tools (Function Calling)
  */
 export const chatWithTravelCopilot = async (
   params: CopilotChatParams,
-): Promise<string> => {
-  try {
-    const systemInstruction = `
-      You are ItinerAI Copilot, a sophisticated, enthusiastic, and deeply knowledgeable local travel guide and concierge in ${
-        params.destination
-      }.
-      
-      TRIP CONTEXT GROUNDING:
-      - Destination: ${params.destination}
-      - Trip Duration: ${params.daysCount || 'Multi-day'} days
-      - Budget Tier: ${params.budget || 'Medium'}
-      - Current Weather: ${params.weatherSummary || 'Clear/Typical seasonal'}
-      ${
-        params.itinerarySummary
-          ? `- Active Itinerary Overview:\n${params.itinerarySummary}`
-          : ''
+): Promise<CopilotChatResult> => {
+  if (!genAI) {
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is missing from .env file');
+    }
+    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  }
+
+  const systemInstruction = `
+    You are ItinerAI Copilot, a sophisticated, enthusiastic, and deeply knowledgeable local travel guide, concierge, and autonomous action agent in ${
+      params.destination
+    }.
+    
+    TRIP CONTEXT GROUNDING:
+    - Destination: ${params.destination}
+    - Trip Duration: ${params.daysCount || 'Multi-day'} days
+    - Budget Tier: ${params.budget || 'Medium'}
+    - Current Weather: ${params.weatherSummary || 'Clear/Typical seasonal'}
+    ${
+      params.itinerarySummary
+        ? `- Active Itinerary Overview:\n${params.itinerarySummary}`
+        : ''
+    }
+
+    AGENTIC TOOL CAPABILITIES:
+    You are equipped with real tools to modify the traveler's schedule and trigger native phone actions:
+    1. 'addActivityToSchedule': Call this whenever the user asks to add, insert, or book an attraction, meal, drink, or activity to Day 1, Day 2, etc. Provide accurate category, location, and coordinates.
+    2. 'removeActivityFromSchedule': Call this when the user asks to remove, cancel, or drop an activity or stop from a specific day.
+    3. 'openNavigationDirections': Call this when the user asks for directions, route, or to open a map for any landmark or venue.
+    4. 'togglePackingItemStatus': Call this when the user asks to mark an item as packed or unpacked in their packing checklist.
+
+    CONVERSATIONAL GUIDELINES:
+    1. Always tailor answers specifically to ${params.destination}.
+    2. When a tool is executed, confirm the action warmly in your text response and share a valuable local insider tip about the spot.
+    3. Keep responses punchy, helpful, and scannable for a traveler looking at their phone on the go.
+    4. Use markdown bullet points and bolding for readability.
+    5. Maintain an encouraging, warm, and professional tone.
+  `;
+
+  // Format previous conversation history for startChat
+  // Gemini requires the first message in history to have role 'user'
+  const firstUserIdx = params.messages.findIndex(m => m.role === 'user');
+  const priorMessages =
+    firstUserIdx >= 0 ? params.messages.slice(firstUserIdx, -1) : [];
+
+  const chatHistory = priorMessages.map(m => ({
+    role: m.role === 'user' ? 'user' : 'model',
+    parts: [{text: m.text}],
+  }));
+
+  const latestUserMessage =
+    params.messages[params.messages.length - 1]?.text ||
+    'Hello Copilot, how can you help me today?';
+
+  let lastError: any = null;
+
+  // 1. Attempt agentic turn with function calling across candidate models
+  for (const modelName of CANDIDATE_MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        tools: copilotTools,
+        systemInstruction,
+        generationConfig: {
+          temperature: 0.7,
+        },
+      });
+
+      const chat = model.startChat({
+        history: chatHistory,
+      });
+
+      const result = await chat.sendMessage(latestUserMessage);
+      const response = await result.response;
+      const functionCalls = response.functionCalls();
+
+      const executedActions: AgentAction[] = [];
+
+      if (functionCalls && functionCalls.length > 0) {
+        const functionResponses = [];
+
+        for (const call of functionCalls) {
+          const args = (call.args as Record<string, any>) || {};
+          let action: AgentAction | null = null;
+
+          if (call.name === 'addActivityToSchedule') {
+            const rawDay = Number(args.dayNumber);
+            const dayNum = isNaN(rawDay) || rawDay < 1 ? 1 : rawDay;
+            action = {
+              id: `act_${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2, 7)}`,
+              type: 'add_activity',
+              title: `Added "${args.name}" to Day ${dayNum}`,
+              details: `${args.time || 'Flexible'} · ${
+                args.location || params.destination
+              }`,
+              timestamp: Date.now(),
+              metadata: {
+                dayNumber: dayNum,
+                activity: {
+                  time: args.time || '10:00 AM',
+                  name: args.name,
+                  location: args.location || params.destination,
+                  description: args.description || '',
+                  category: args.category || 'other',
+                  estimatedCost: args.estimatedCost || 'Moderate',
+                  coordinates:
+                    args.latitude && args.longitude
+                      ? {
+                          latitude: Number(args.latitude),
+                          longitude: Number(args.longitude),
+                        }
+                      : undefined,
+                },
+              },
+            };
+          } else if (call.name === 'removeActivityFromSchedule') {
+            const rawDay = Number(args.dayNumber);
+            const dayNum = isNaN(rawDay) || rawDay < 1 ? 1 : rawDay;
+            action = {
+              id: `act_${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2, 7)}`,
+              type: 'remove_activity',
+              title: `Removed "${args.activityName}" from Day ${dayNum}`,
+              timestamp: Date.now(),
+              metadata: {
+                dayNumber: dayNum,
+                activityName: args.activityName,
+              },
+            };
+          } else if (call.name === 'openNavigationDirections') {
+            action = {
+              id: `act_${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2, 7)}`,
+              type: 'open_directions',
+              title: `Directions to "${args.destinationName}"`,
+              details:
+                args.latitude && args.longitude
+                  ? `${Number(args.latitude).toFixed(4)}, ${Number(
+                      args.longitude,
+                    ).toFixed(4)}`
+                  : 'Opening Maps...',
+              timestamp: Date.now(),
+              metadata: {
+                destinationName: args.destinationName,
+                latitude: args.latitude ? Number(args.latitude) : undefined,
+                longitude: args.longitude ? Number(args.longitude) : undefined,
+              },
+            };
+          } else if (call.name === 'togglePackingItemStatus') {
+            const isPacked = Boolean(args.isPacked);
+            action = {
+              id: `act_${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2, 7)}`,
+              type: 'toggle_packing',
+              title: `${isPacked ? 'Packed' : 'Unpacked'}: "${args.itemName}"`,
+              timestamp: Date.now(),
+              metadata: {
+                itemName: args.itemName,
+                isPacked,
+              },
+            };
+          }
+
+          if (action) {
+            executedActions.push(action);
+            if (params.onExecuteTool) {
+              await params.onExecuteTool(action);
+            }
+          }
+
+          functionResponses.push({
+            functionResponse: {
+              name: call.name,
+              response: {
+                status: 'success',
+                message: action ? action.title : 'Action executed successfully',
+              },
+            },
+          });
+        }
+
+        // Send function execution results back to Gemini to obtain conversational confirmation
+        const followUp = await chat.sendMessage(functionResponses);
+        const followUpResponse = await followUp.response;
+        return {
+          replyText: followUpResponse.text().trim(),
+          executedActions,
+        };
       }
 
-      CONVERSATIONAL GUIDELINES:
-      1. Always tailor answers specifically to ${params.destination}.
-      2. Keep responses punchy, helpful, and scannable for a traveler looking at their phone on the go.
-      3. Use markdown bullet points and bolding for readability.
-      4. Provide actionable, insider advice (best times to avoid lines, local dishes to order, tipping customs, transit navigation).
-      5. Maintain an encouraging, warm, and professional tone.
-    `;
+      // No tools called; standard conversational response
+      return {
+        replyText: response.text().trim(),
+        executedActions: [],
+      };
+    } catch (err: any) {
+      lastError = err;
+      console.warn(
+        `Agentic Copilot with model ${modelName} encountered issue:`,
+        err?.message || err,
+      );
+    }
+  }
 
-    // Format the conversation history
+  // 2. Resilient Fallback: If all tool-calling attempts failed, fall back to standard text conversation
+  try {
     const conversationHistory = params.messages
       .map(m => `${m.role === 'user' ? 'Traveler' : 'Copilot'}: ${m.text}`)
       .join('\n\n');
 
-    const prompt = `
+    const fallbackPrompt = `
       CONVERSATION SO FAR:
       ${conversationHistory}
 
       Reply as ItinerAI Copilot to the traveler's latest message with insightful, context-grounded travel advice.
     `;
 
-    const text = await executeWithFallback(prompt, {
+    const text = await executeWithFallback(fallbackPrompt, {
       systemInstruction,
       temperature: 0.8,
     });
-    return text.trim();
-  } catch (error) {
-    console.error('Error chatting with travel copilot:', error);
-    throw new Error('Travel Copilot is temporarily unavailable. Please retry.');
+
+    return {
+      replyText: text.trim(),
+      executedActions: [],
+    };
+  } catch (err) {
+    console.error('Final fallback Copilot chat failed:', err);
+    throw lastError || err;
   }
 };
 
