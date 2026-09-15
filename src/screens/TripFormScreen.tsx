@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ import {
   ImageBackground,
   ActivityIndicator,
 } from 'react-native';
-import { BlurView } from '@react-native-community/blur';
-import { useDispatch, useSelector } from 'react-redux';
+import {BlurView} from '@react-native-community/blur';
+import {useDispatch, useSelector} from 'react-redux';
 import {
   setDestination as setReduxDestination,
   setDays as setReduxDays,
@@ -21,9 +21,9 @@ import {
   toggleInterest as toggleReduxInterest,
   selectIsFormValid,
 } from '../store/tripSlice';
-import { fetchItinerary } from '../store/itinerarySlice';
-import { AppDispatch, RootState } from '../store';
-import { fetchCitySuggestions, PlaceSuggestion } from '../services/placesService';
+import {fetchItinerary} from '../store/itinerarySlice';
+import {AppDispatch, RootState} from '../store';
+import {fetchCitySuggestions, PlaceSuggestion} from '../services/placesService';
 import {
   MapPin,
   Sparkles,
@@ -38,7 +38,7 @@ import {
   CreditCard,
   Gem,
 } from 'lucide-react-native';
-import { fp } from '../utils/responsive';
+import {fp} from '../utils/responsive';
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -53,15 +53,15 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const INTERESTS = [
-  { id: 'Food', label: 'Food & Dining', icon: Utensils },
-  { id: 'History', label: 'History', icon: Landmark },
-  { id: 'Nightlife', label: 'Nightlife', icon: Moon },
-  { id: 'Art', label: 'Art Galleries', icon: Palette },
-  { id: 'Nature', label: 'Nature', icon: TreePine },
-  { id: 'Shopping', label: 'Shopping', icon: ShoppingBag },
+  {id: 'Food', label: 'Food & Dining', icon: Utensils},
+  {id: 'History', label: 'History', icon: Landmark},
+  {id: 'Nightlife', label: 'Nightlife', icon: Moon},
+  {id: 'Art', label: 'Art Galleries', icon: Palette},
+  {id: 'Nature', label: 'Nature', icon: TreePine},
+  {id: 'Shopping', label: 'Shopping', icon: ShoppingBag},
 ];
 
-export const TripFormScreen: React.FC<any> = ({ navigation }) => {
+export const TripFormScreen: React.FC<any> = ({navigation}) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const destination = useSelector((state: RootState) => state.trip.destination);
@@ -107,8 +107,6 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
     navigation.navigate('Loading');
   };
 
-
-
   const showDropdown = searchInput.length > 0 && !destination;
 
   return (
@@ -141,7 +139,7 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
               blurAmount={20}
               reducedTransparencyFallbackColor="white">
               {/* DESTINATION */}
-              <View style={[styles.section, { zIndex: 10 }]}>
+              <View style={[styles.section, {zIndex: 10}]}>
                 <Text style={styles.label}>Destination</Text>
 
                 {destination ? (
@@ -187,7 +185,7 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                             style={[
                               styles.dropdownItem,
                               idx < suggestions.length - 1 &&
-                              styles.dropdownBorder,
+                                styles.dropdownBorder,
                             ]}
                             onPress={() =>
                               handleSelectSuggestion(s.description)
@@ -279,7 +277,7 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                         <Icon
                           color={isSelected ? '#0F4C5C' : '#9CA3AF'}
                           size={24}
-                          style={{ marginBottom: 8 }}
+                          style={{marginBottom: 8}}
                         />
                         <Text
                           style={[
@@ -324,7 +322,7 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
                         <Icon
                           color={isSelected ? '#FFFFFF' : '#4B5563'}
                           size={14}
-                          style={{ marginRight: 6 }}
+                          style={{marginRight: 6}}
                         />
                         <Text
                           style={[
@@ -353,12 +351,12 @@ export const TripFormScreen: React.FC<any> = ({ navigation }) => {
               <Sparkles
                 color={isFormValid ? '#FFFFFF' : '#9CA3AF'}
                 size={20}
-                style={{ marginRight: 8 }}
+                style={{marginRight: 8}}
               />
               <Text
                 style={[
                   styles.submitButtonText,
-                  !isFormValid && { color: '#9CA3AF' },
+                  !isFormValid && {color: '#9CA3AF'},
                 ]}>
                 Generate Itinerary
               </Text>
@@ -399,7 +397,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     letterSpacing: -1,
     textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 2 },
+    textShadowOffset: {width: 0, height: 2},
     textShadowRadius: 4,
   },
   headerSubtitle: {
@@ -407,7 +405,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
+    textShadowOffset: {width: 0, height: 1},
     textShadowRadius: 2,
   },
   scrollView: {
@@ -518,7 +516,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -561,11 +559,11 @@ const styles = StyleSheet.create({
     borderColor: '#0F4C5C',
     borderWidth: 2,
     shadowColor: '#0F4C5C',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-    transform: [{ scale: 1.02 }], // Slight pop effect for interactivity
+    transform: [{scale: 1.02}], // Slight pop effect for interactivity
   },
   budgetCardTitle: {
     fontSize: fp(1.4),
@@ -639,7 +637,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#FF6B4A',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: {width: 0, height: 8},
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 8,

@@ -3,3 +3,4 @@ vendor/
 ios/
 android/
 .bundle/
+coverage/

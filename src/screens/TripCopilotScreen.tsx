@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, {useState, useEffect, useRef, useMemo, useCallback} from 'react';
 import {
   View,
   Text,
@@ -17,19 +17,19 @@ import {
   Share,
   ScrollView,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
-import { chatWithTravelCopilot } from '../services/llmService';
-import { storageService } from '../services/storageService';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {useSelector, useDispatch} from 'react-redux';
+import {RootState} from '../store';
+import {chatWithTravelCopilot} from '../services/llmService';
+import {storageService} from '../services/storageService';
 import {
   addActivityToDay,
   removeActivityFromDay,
   togglePackingItemByName,
 } from '../store/itinerarySlice';
-import { ChatMessage, AgentAction } from '../types/trip';
-import { fp } from '../utils/responsive';
+import {ChatMessage, AgentAction} from '../types/trip';
+import {fp} from '../utils/responsive';
 import {
   ChevronLeft,
   Sparkles,
@@ -112,10 +112,10 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
   },
 ];
 
-export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { destination, daysCount, budget, tripId } = route.params;
+export const TripCopilotScreen: React.FC<Props> = ({route, navigation}) => {
+  const {destination, daysCount, budget, tripId} = route.params;
   const dispatch = useDispatch();
-  const { currentItinerary, weather } = useSelector(
+  const {currentItinerary, weather} = useSelector(
     (state: RootState) => state.itinerary,
   );
 
@@ -185,18 +185,18 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
         url =
           Platform.OS === 'ios'
             ? `maps://?daddr=${latitude},${longitude}&q=${encodeURIComponent(
-              destinationName,
-            )}`
+                destinationName,
+              )}`
             : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
       } else {
         url =
           Platform.OS === 'ios'
             ? `maps://?q=${encodeURIComponent(
-              destinationName + ', ' + destination,
-            )}`
+                destinationName + ', ' + destination,
+              )}`
             : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-              destinationName + ', ' + destination,
-            )}`;
+                destinationName + ', ' + destination,
+              )}`;
       }
 
       Linking.canOpenURL(url).then(supported => {
@@ -239,11 +239,13 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
         const welcomeMessage: ChatMessage = {
           id: `msg_welcome_${Date.now()}`,
           role: 'model',
-          text: `Hello! I'm your **ItinerAI Copilot** for **${destination}**.\n\nI have full context of your ${daysCount || (currentItinerary?.days.length ?? 3)
-            }-day plan${weather
+          text: `Hello! I'm your **ItinerAI Copilot** for **${destination}**.\n\nI have full context of your ${
+            daysCount || (currentItinerary?.days.length ?? 3)
+          }-day plan${
+            weather
               ? ` and live weather (${weather.condition}, ${weather.temp}°C)`
               : ''
-            }.\n\n• Ask for hidden gems, transit tips, or food spots.\n• Give me commands like **"Add an espresso stop to Day 1"** or **"Open directions to our landmark"** and I'll execute them for you!`,
+          }.\n\n• Ask for hidden gems, transit tips, or food spots.\n• Give me commands like **"Add an espresso stop to Day 1"** or **"Open directions to our landmark"** and I'll execute them for you!`,
           timestamp: Date.now(),
         };
         setMessages([welcomeMessage]);
@@ -384,7 +386,7 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
       'Reset Conversation',
       'Are you sure you want to clear the Copilot chat history for this trip?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
           text: 'Clear',
           style: 'destructive',
@@ -404,11 +406,11 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   const scrollToBottom = () => {
-    flatListRef.current?.scrollToEnd({ animated: true });
+    flatListRef.current?.scrollToEnd({animated: true});
   };
 
   const handleScroll = (event: any) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const {layoutMeasurement, contentOffset, contentSize} = event.nativeEvent;
     const isNearBottom =
       layoutMeasurement.height + contentOffset.y >= contentSize.height - 100;
     setShowScrollBottom(!isNearBottom && contentOffset.y > 160);
@@ -438,8 +440,8 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
           const content = isBullet
             ? trimmed.replace(/^[-*•]\s+/, '')
             : numberMatch
-              ? trimmed.slice(numberMatch[0].length)
-              : trimmed;
+            ? trimmed.slice(numberMatch[0].length)
+            : trimmed;
 
           // Parse bold **text** within content
           const parts = content.split(/(\*\*.*?\*\*)/g);
@@ -485,7 +487,7 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   };
 
-  const renderMessageItem = ({ item }: { item: ChatMessage }) => {
+  const renderMessageItem = ({item}: {item: ChatMessage}) => {
     const isUser = item.role === 'user';
     return (
       <View
@@ -564,7 +566,7 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
               <TouchableOpacity
                 style={styles.shareBtn}
                 activeOpacity={0.6}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
                 onPress={() => handleShareMessage(item.text)}>
                 <Share2 size={12} color="#94A3B8" />
                 <Text style={styles.shareBtnText}>Share</Text>
@@ -607,7 +609,7 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
         <Animated.View
           style={[
             styles.floatingToast,
-            { transform: [{ translateY: toastAnim }] },
+            {transform: [{translateY: toastAnim}]},
           ]}>
           <View style={styles.toastGlowBadge}>
             <Zap size={14} color="#FFFFFF" />
@@ -762,7 +764,7 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
             data={selectedCategoryData.prompts}
             keyExtractor={item => item}
             contentContainerStyle={styles.suggestionsScroll}
-            renderItem={({ item }) => (
+            renderItem={({item}) => (
               <TouchableOpacity
                 style={styles.suggestionChip}
                 activeOpacity={0.7}
@@ -784,8 +786,9 @@ export const TripCopilotScreen: React.FC<Props> = ({ route, navigation }) => {
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.textInput}
-              placeholder={`Ask or command Copilot in ${destination.split(',')[0]
-                }...`}
+              placeholder={`Ask or command Copilot in ${
+                destination.split(',')[0]
+              }...`}
               placeholderTextColor="#94A3B8"
               value={inputText}
               onChangeText={setInputText}
@@ -844,7 +847,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 6,
@@ -1016,7 +1019,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
@@ -1122,7 +1125,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
@@ -1195,7 +1198,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#CBD5E1',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.03,
     shadowRadius: 2,
   },

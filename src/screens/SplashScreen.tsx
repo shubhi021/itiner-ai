@@ -141,10 +141,7 @@ export const SplashScreen: React.FC<Props> = ({navigation}) => {
           {/* Logo with Ambient Glow */}
           <View style={styles.emblemWrapper}>
             <Animated.View
-              style={[
-                styles.glowAura,
-                {transform: [{scale: pulseAnim}]},
-              ]}
+              style={[styles.glowAura, {transform: [{scale: pulseAnim}]}]}
             />
             <View style={styles.logoCard}>
               <BrandLogoIcon />

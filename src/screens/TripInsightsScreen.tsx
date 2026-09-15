@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -11,17 +11,17 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../navigation/types';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../store';
 import {
   fetchPackingList,
   togglePackingItem,
   fetchDestinationInsights,
   fetchBudgetForecast,
 } from '../store/itinerarySlice';
-import { fp } from '../utils/responsive';
+import {fp} from '../utils/responsive';
 import {
   ChevronLeft,
   Sparkles,
@@ -42,9 +42,9 @@ import {
 type Props = NativeStackScreenProps<RootStackParamList, 'TripInsights'>;
 type ActiveTab = 'packing' | 'guide' | 'budget';
 
-export const TripInsightsScreen: React.FC<Props> = ({ route, navigation }) => {
+export const TripInsightsScreen: React.FC<Props> = ({route, navigation}) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { destination, daysCount, budget } = route.params;
+  const {destination, daysCount, budget} = route.params;
 
   const {
     currentItinerary,
@@ -88,7 +88,7 @@ export const TripInsightsScreen: React.FC<Props> = ({ route, navigation }) => {
         activities: allActivities,
       }),
     );
-    dispatch(fetchDestinationInsights({ destination }));
+    dispatch(fetchDestinationInsights({destination}));
     dispatch(
       fetchBudgetForecast({
         destination,
@@ -108,11 +108,11 @@ export const TripInsightsScreen: React.FC<Props> = ({ route, navigation }) => {
   // Packing stats
   const packingStats = useMemo(() => {
     if (!packingList || packingList.length === 0) {
-      return { packed: 0, total: 0, percentage: 0 };
+      return {packed: 0, total: 0, percentage: 0};
     }
     const packed = packingList.filter(i => i.packed).length;
     const total = packingList.length;
-    return { packed, total, percentage: Math.round((packed / total) * 100) };
+    return {packed, total, percentage: Math.round((packed / total) * 100)};
   }, [packingList]);
 
   // Group packing items by category
@@ -128,7 +128,7 @@ export const TripInsightsScreen: React.FC<Props> = ({ route, navigation }) => {
   }, [packingList]);
 
   const handleToggleItem = (id: string) => {
-    dispatch(togglePackingItem({ id, destination }));
+    dispatch(togglePackingItem({id, destination}));
   };
 
   const handleCallEmergency = (phoneNum: string) => {
@@ -259,7 +259,7 @@ export const TripInsightsScreen: React.FC<Props> = ({ route, navigation }) => {
                 <View
                   style={[
                     styles.progressBarFill,
-                    { width: `${packingStats.percentage}%` },
+                    {width: `${packingStats.percentage}%`},
                   ]}
                 />
               </View>
@@ -518,7 +518,7 @@ export const TripInsightsScreen: React.FC<Props> = ({ route, navigation }) => {
                         <View
                           style={[
                             styles.catProgressBarFill,
-                            { width: `${Math.min(cat.percentage, 100)}%` },
+                            {width: `${Math.min(cat.percentage, 100)}%`},
                           ]}
                         />
                       </View>
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,

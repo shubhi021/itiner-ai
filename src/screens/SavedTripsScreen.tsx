@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,8 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../store';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../store';
 import {
   loadSavedTrips,
   deleteTrip,
@@ -22,9 +22,9 @@ import {
   setActiveFilter,
   setSearchQuery,
 } from '../store/savedTripsSlice';
-import { setItinerary, setWeather } from '../store/itinerarySlice';
-import { SavedTrip } from '../services/storageService';
-import { fp } from '../utils/responsive';
+import {setItinerary, setWeather} from '../store/itinerarySlice';
+import {SavedTrip} from '../services/storageService';
+import {fp} from '../utils/responsive';
 import {
   Search,
   MoreVertical,
@@ -33,19 +33,19 @@ import {
   X,
   Sparkles,
 } from 'lucide-react-native';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { MainTabParamList, RootStackParamList } from '../navigation/types';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {CompositeScreenProps} from '@react-navigation/native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {MainTabParamList, RootStackParamList} from '../navigation/types';
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<MainTabParamList, 'Trips'>,
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
+export const SavedTripsScreen: React.FC<Props> = ({navigation}) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { trips, loading, activeFilter, searchQuery } = useSelector(
+  const {trips, loading, activeFilter, searchQuery} = useSelector(
     (state: RootState) => state.savedTrips,
   );
 
@@ -147,7 +147,7 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
               'Delete Trip',
               `Are you sure you want to remove ${trip.title} from offline storage?`,
               [
-                { text: 'Cancel', style: 'cancel' },
+                {text: 'Cancel', style: 'cancel'},
                 {
                   text: 'Delete',
                   style: 'destructive',
@@ -157,9 +157,9 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
             );
           },
         },
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
       ],
-      { cancelable: true },
+      {cancelable: true},
     );
   };
 
@@ -189,16 +189,16 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const renderTripCard = ({ item }: { item: SavedTrip }) => (
+  const renderTripCard = ({item}: {item: SavedTrip}) => (
     <TouchableOpacity
       style={styles.cardContainer}
       activeOpacity={0.85}
       onPress={() => handleSelectTrip(item)}>
       <Image
-        source={{ uri: item.imageUrl }}
+        source={{uri: item.imageUrl}}
         style={[
           styles.cardImage,
-          item.status === 'COMPLETED' && { opacity: 0.65 },
+          item.status === 'COMPLETED' && {opacity: 0.65},
         ]}
       />
       <View style={styles.cardContent}>
@@ -206,10 +206,10 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
           <View
             style={[
               styles.statusBadge,
-              { backgroundColor: getStatusBgColor(item.status) },
+              {backgroundColor: getStatusBgColor(item.status)},
             ]}>
             <Text
-              style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              style={[styles.statusText, {color: getStatusColor(item.status)}]}>
               {item.status}
             </Text>
           </View>
@@ -230,7 +230,7 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.moreButton}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
         onPress={() => handleOpenActionMenu(item)}>
         <MoreVertical size={20} color="#9CA3AF" />
       </TouchableOpacity>
@@ -333,7 +333,7 @@ export const SavedTripsScreen: React.FC<Props> = ({ navigation }) => {
                 style={styles.emptyCtaButton}
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('Plan')}>
-                <Sparkles size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Sparkles size={16} color="#FFFFFF" style={{marginRight: 6}} />
                 <Text style={styles.emptyCtaText}>Plan a New Trip</Text>
               </TouchableOpacity>
             )}
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.12)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.08)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(15, 76, 92, 0.06)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     shadowColor: '#0F4C5C',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 4,

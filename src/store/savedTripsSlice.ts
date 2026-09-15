@@ -1,5 +1,5 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { SavedTrip, storageService } from '../services/storageService';
+import {createSlice, createAsyncThunk, PayloadAction} from '@reduxjs/toolkit';
+import {SavedTrip, storageService} from '../services/storageService';
 
 export interface SavedTripsState {
   trips: SavedTrip[];
@@ -17,24 +17,23 @@ const initialState: SavedTripsState = {
   searchQuery: '',
 };
 
-
 export const loadSavedTrips = createAsyncThunk(
   'savedTrips/loadSavedTrips',
-  async (_, { rejectWithValue }) => {
+  async (_, {rejectWithValue}) => {
     try {
       const trips = await storageService.getSavedTrips();
       return trips;
     } catch (error: any) {
       return rejectWithValue(
-        error.message || 'Failed to load saved trips from the storage'
-      )
+        error.message || 'Failed to load saved trips from the storage',
+      );
     }
-  }
-)
+  },
+);
 
 export const saveTrip = createAsyncThunk(
   'savedTrips/saveTrip',
-  async (trip: SavedTrip, { rejectWithValue }) => {
+  async (trip: SavedTrip, {rejectWithValue}) => {
     try {
       await storageService.saveTrip(trip);
       return trip;
@@ -44,22 +43,23 @@ export const saveTrip = createAsyncThunk(
   },
 );
 
-export const deleteTrip = createAsyncThunk('deleteTrip',
-  async (id: string, { rejectWithValue }) => {
+export const deleteTrip = createAsyncThunk(
+  'deleteTrip',
+  async (id: string, {rejectWithValue}) => {
     try {
       await storageService.deleteTrip(id);
       return id;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to delete trip')
+      return rejectWithValue(error.message || 'Failed to delete trip');
     }
-  }
-)
+  },
+);
 
 export const updateTripStatus = createAsyncThunk(
   'savedTrips/updateTripStatus',
   async (
-    params: { id: string; status: 'UPCOMING' | 'COMPLETED' | 'DRAFT' },
-    { rejectWithValue },
+    params: {id: string; status: 'UPCOMING' | 'COMPLETED' | 'DRAFT'},
+    {rejectWithValue},
   ) => {
     try {
       await storageService.updateTripStatus(params.id, params.status);
@@ -87,12 +87,10 @@ const savedTripsSlice = createSlice({
   extraReducers: builder => {
     builder
       // Load trips
-      .addCase(
-        loadSavedTrips.pending, (state) => {
-          state.loading = true;
-          state.error = null;
-        }
-      )
+      .addCase(loadSavedTrips.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(loadSavedTrips.fulfilled, (state, action) => {
         state.loading = false;
         state.trips = action.payload;
@@ -108,9 +106,8 @@ const savedTripsSlice = createSlice({
         const index = state.trips.findIndex(t => t.id === saved.id);
         if (index > 0) {
           state.trips[index] = saved;
-        }
-        else {
-          state.trips.unshift(saved)
+        } else {
+          state.trips.unshift(saved);
         }
       })
       // Delete trip
@@ -120,15 +117,15 @@ const savedTripsSlice = createSlice({
 
       // Update trip status
       .addCase(updateTripStatus.fulfilled, (state, action) => {
-        const { id, status } = action.payload;
-        const trip = state.trips.find(t => t.id === id)
+        const {id, status} = action.payload;
+        const trip = state.trips.find(t => t.id === id);
         if (trip) {
           trip.status = status;
         }
-      })
+      });
   },
 });
 
-export const { setActiveFilter, setSearchQuery } = savedTripsSlice.actions;
+export const {setActiveFilter, setSearchQuery} = savedTripsSlice.actions;
 
 export default savedTripsSlice.reducer;
