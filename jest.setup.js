@@ -135,11 +135,16 @@ jest.mock('react-native-screens', () => {
   return {
     enableScreens: jest.fn(),
     screensEnabled: jest.fn(() => true),
+    isSearchBarAvailableForCurrentPlatform: jest.fn(() => true),
+    compatibilityFlags: {},
     ScreenContainer: View,
     Screen: View,
     NativeScreen: View,
     NativeScreenContainer: View,
     ScreenStack: View,
+    ScreenStackItem: View,
+    ScreenFooter: View,
+    Tabs: View,
     ScreenStackHeaderConfig: View,
     ScreenStackHeaderBackButtonImage: View,
     ScreenStackHeaderRightView: View,
@@ -156,7 +161,8 @@ jest.mock(
   '@env',
   () => ({
     GEMINI_API_KEY: 'test-gemini-key',
-    OPENWEATHER_API_KEY: 'test-openweather-key',
+    GOOGLE_MAPS_API_KEY: 'test-maps-key',
+    OPENWEATHERMAP_API_KEY: 'test-openweather-key',
   }),
   {virtual: true},
 );
