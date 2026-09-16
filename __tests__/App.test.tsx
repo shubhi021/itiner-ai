@@ -1,17 +1,23 @@
-/**
- * @format
- */
-
 import 'react-native';
 import React from 'react';
 import App from '../App';
+import {it, describe, expect, beforeEach, afterEach} from '@jest/globals';
+import renderer, {act} from 'react-test-renderer';
 
-// Note: import explicitly to use the types shipped with jest.
-import {it} from '@jest/globals';
+describe('App Root', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
 
-// Note: test renderer must be required after react-native.
-import renderer from 'react-test-renderer';
+  afterEach(() => {
+    jest.useRealTimers();
+  });
 
-it('renders correctly', () => {
-  renderer.create(<App />);
+  it('renders root application without crashing', () => {
+    let tree: any;
+    act(() => {
+      tree = renderer.create(<App />);
+    });
+    expect(tree).toBeDefined();
+  });
 });
