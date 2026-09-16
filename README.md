@@ -1,232 +1,181 @@
-# ItinerAI ✈️
+# ItinerAI
 
-> **Next-Generation LLM-Integrated Travel Itinerary & Smart Copilot Application built with React Native & Google Gemini.**
+An AI-powered travel itinerary planner and smart assistant built with React Native and Google Gemini. Generates personalized, day-by-day travel schedules with real-time weather integration, interactive maps, and offline support.
 
-[![React Native](https://img.shields.io/badge/React_Native-0.73.6-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactnative.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0.4-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Google Gemini](https://img.shields.io/badge/Google_Gemini-1.5_Flash-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
-[![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-2.12-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
-[![AsyncStorage](https://img.shields.io/badge/Offline_Storage-AsyncStorage-blueviolet?style=for-the-badge)](https://github.com/react-native-async-storage/async-storage)
-
----
-
-## 🌟 Overview
-
-**ItinerAI** is a production-grade, offline-resilient mobile application that demonstrates cutting-edge **Large Language Model (LLM) integration patterns in React Native**.
-
-Unlike simple wrapper apps that merely dump raw text prompts into a chat window, ItinerAI treats the LLM as an **intelligent structured travel architect and real-time copilot**:
-- Enforces strict **Structured JSON Mode** for multi-day itineraries, coordinates, and activity cards.
-- Integrates a **Real-Time Context Engine** injecting live weather forecasts into prompt engineering.
-- Powers a **Grounded Conversational Travel Copilot** aware of the traveler's active itinerary, budget, and local constraints.
-- Features **Prompt-to-Edit Day Optimization** allowing travelers to re-plan full days using natural language presets (*Relaxed*, *Foodie Tour*, *Efficient Transit*, *Rainy Day Protocol*).
-- Delivers an **AI Trip Intelligence Suite** with weather-adaptive packing checklists, cultural etiquette guides, and itemized budget projections.
-- Fully operational in **offline environments** (airports, subways, flights) with persistent caching.
+[![CI](https://github.com/shubhi021/itiner-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/shubhi021/itiner-ai/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-7%20passed-brightgreen.svg)](https://github.com/shubhi021/itiner-ai)
+[![React Native](https://img.shields.io/badge/React%20Native-0.73.6-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
 
-## 🏗️ System Architecture
+## Screenshots
 
-```mermaid
-flowchart TB
-    subgraph UI ["📱 React Native Client (UI Layer)"]
-        Form["TripFormScreen\n(OSM Autocomplete & Vibes)"]
-        Detail["ItineraryDetailScreen\n(Interactive Timeline & Maps)"]
-        Copilot["TripCopilotScreen\n(Conversational Assistant)"]
-        Insights["TripInsightsScreen\n(Packing, Etiquette & Budget)"]
-        Saved["SavedTripsScreen\n(Offline Trip Library)"]
-    end
-
-    subgraph State ["⚡ State Management (Redux Toolkit)"]
-        TripSlice["tripSlice (Form State)"]
-        ItinSlice["itinerarySlice (Active Trip & Copilot)"]
-        SavedSlice["savedTripsSlice (CRUD Management)"]
-    end
-
-    subgraph Services ["🧠 Intelligence & Service Layer"]
-        LLM["llmService.ts\n(Gemini 1.5 Flash / 2.0 Cascade)"]
-        Weather["weatherService.ts\n(OpenWeatherMap API)"]
-        Storage["storageService.ts\n(AsyncStorage Persistence)"]
-    end
-
-    subgraph External ["🌐 External Providers"]
-        GeminiAPI["Google Gemini API\n(Structured JSON Mode)"]
-        WeatherAPI["OpenWeatherMap API\n(Live Weather Conditions)"]
-        OSM["OpenStreetMap Nominatim\n(Geocoding Autocomplete)"]
-    end
-
-    Form --> TripSlice
-    TripSlice --> LLM
-    LLM --> GeminiAPI
-    Detail --> ItinSlice
-    ItinSlice --> Weather
-    Weather --> WeatherAPI
-    Copilot --> LLM
-    Insights --> LLM
-    ItinSlice --> Storage
-    SavedSlice --> Storage
-```
+<!-- Add your app screenshots or demo recordings here -->
+| Trip Planning | Itinerary Timeline | AI Travel Copilot | Packing & Insights |
+| :---: | :---: | :---: | :---: |
+| *Add screenshot* | *Add screenshot* | *Add screenshot* | *Add screenshot* |
 
 ---
 
-## 🚀 Advanced LLM Engineering Patterns
+## Overview
 
-### 1. Strict Structured JSON Mode (`responseSchema`)
-Rather than relying on fragile regex post-processing or markdown fences, ItinerAI utilizes Google Gemini's native `responseSchema` with typed `SchemaType` definitions:
-- **Full Itinerary Schema**: Enforces an exact schema returning days, ordered activity times, categories, locations, and geocoordinates (`latitude` / `longitude`) for map plotting.
-- **Single Activity Pivot Schema**: Returns single replacement activity objects when swapping stops.
-- **Day Re-Optimization Schema**: Re-plans full day schedules while strictly guaranteeing valid activity structures.
-- **Trip Intelligence Schemas**: Strongly typed outputs for packing checklists, cultural etiquette, and itemized financial projections.
+Planning a multi-day trip usually means juggling maps, weather apps, travel blogs, and notes across multiple windows. **ItinerAI** consolidates this workflow into a single mobile experience:
 
-```typescript
-// Example: Strict Schema Enforcement for Day Re-Optimization
-const dayActivitiesSchema: Schema = {
-  type: SchemaType.ARRAY,
-  items: {
-    type: SchemaType.OBJECT,
-    properties: {
-      time: { type: SchemaType.STRING },
-      name: { type: SchemaType.STRING },
-      description: { type: SchemaType.STRING },
-      location: { type: SchemaType.STRING },
-      coordinates: {
-        type: SchemaType.OBJECT,
-        properties: {
-          latitude: { type: SchemaType.NUMBER },
-          longitude: { type: SchemaType.NUMBER },
-        },
-        required: ['latitude', 'longitude'],
-      },
-      estimatedCost: { type: SchemaType.STRING },
-      category: {
-        type: SchemaType.STRING,
-        format: 'enum',
-        enum: ['food', 'landmark', 'nature', 'nightlife', 'shopping', 'other'],
-      },
-    },
-    required: ['time', 'name', 'description', 'location', 'category', 'coordinates'],
-  },
-};
-```
-
-### 2. In-Context Grounding & Prompt Engineering
-The AI Travel Copilot receives dynamically assembled system instructions grounding every response in real-world trip parameters:
-- **Active Destination & Duration**: Avoids hallucinating out-of-town suggestions.
-- **Live Weather Context**: Injects current conditions (e.g. *"Heavy Rain, 14°C"*) to prioritize indoor alternatives.
-- **Trip Budget Tier & Group Composition**: Tailors recommendations to budget tier (`low`, `mid`, `high`) and travel style (solo, couple, family, friends).
-- **Scheduled Timeline**: Avoids recommending attractions already planned on other days.
-
-### 3. Prompt-to-Edit: Full-Day AI Re-Optimizer
-Travelers can transform an entire day's schedule via curated presets or natural language guidance:
-- **Relaxed & Leisurely**: Reduces stops to 2-3 unhurried highlights with leisurely cafe pacing.
-- **Food & Culinary Focus**: Swaps generic sights for famous artisan markets, historic bakeries, and dinner gems.
-- **Efficient Transit**: Geographically clusters stops to minimize walking and transit time.
-- **Rainy Day Protocol**: Automatically migrates outdoor activities into covered arcades, museums, and indoor food halls.
-- **Custom Instructions**: Freeform user prompt guidance (*"Include a scenic sunset viewpoint before dinner"*).
-
-### 4. Multi-Model Resilience & Fallback Cascade
-To safeguard against rate spikes, model migrations, or transient network failures, ItinerAI implements an automated fallback cascade:
-`gemini-1.5-flash` ➡️ `gemini-2.0-flash` ➡️ `gemini-1.5-pro` ➡️ `gemini-flash-latest`.
-
-### 5. Offline-First Resilience & Storage Hydration
-- **Persistent Storage**: Itineraries, user bookmarks, chat history, and packing lists are serialized with `@react-native-async-storage/async-storage`.
-- **TTL Weather Caching**: Cached weather forecasts persist for 1 hour to reduce API hits.
-- **Airplane-Ready Packing & Guides**: Checklists remain interactive and checkable offline so travelers can pack and navigate with zero cellular connectivity.
+- **Structured Day-by-Day Itineraries**: Generates complete daily schedules with activity times, categories, coordinates, and cost estimates.
+- **Weather-Aware Planning**: Fetches local forecasts via OpenWeatherMap to adapt recommendations (e.g., suggesting indoor alternatives on rainy days).
+- **In-App Travel Copilot**: A conversational assistant grounded in your active trip details (destination, dates, budget tier, and travel style).
+- **Prompt-to-Edit Re-Planning**: Modify any day's plan using quick presets (*Relaxed*, *Food Tour*, *Efficient Transit*) or custom natural language instructions.
+- **Trip Intelligence**: Generates a weather-adapted packing checklist, cultural etiquette tips, and an itemized budget breakdown.
+- **Offline-First Storage**: Saves itineraries, checklists, and notes locally using AsyncStorage so you can access your plans without an internet connection.
 
 ---
 
-## ✨ Features
+## How It Works
+
+### Structured Gemini Outputs
+Rather than requesting freeform text and relying on regex or markdown parsing, ItinerAI uses Gemini's native `responseSchema` (`SchemaType.OBJECT`, `SchemaType.ARRAY`). This guarantees that API responses strictly adhere to our TypeScript data models, preventing runtime parsing errors.
+
+### Grounded Context Prompts
+When interacting with the Copilot or requesting schedule adjustments, the app injects relevant trip context into the system prompt:
+- Active destination, dates, and group style (solo, couple, family, friends)
+- Current weather conditions and temperature
+- Selected budget tier (`low`, `mid`, `high`)
+- Scheduled stops from other days to avoid duplicate suggestions
+
+### Multi-Model Fallback Chain
+To protect against rate limits or temporary service degradation, API requests automatically cascade through fallback models:
+`gemini-1.5-flash` &rarr; `gemini-2.0-flash` &rarr; `gemini-1.5-pro` &rarr; `gemini-flash-latest`.
+
+### Local Caching & Persistence
+- Itineraries, saved trips, and packing checklist states are stored locally with `@react-native-async-storage/async-storage`.
+- Weather data is cached with a 1-hour TTL to minimize unnecessary API requests.
+
+---
+
+## Features
 
 | Feature | Description |
 | :--- | :--- |
-| 🤖 **ItinerAI Copilot** | Multi-turn conversational travel assistant with 1-tap suggestion chips and markdown text rendering. |
-| 🔄 **Activity Pivot / Swap** | 1-tap context-aware activity replacement with reason selector (Indoor, Budget, Relaxed, Foodie, Surprise). |
-| ⚡ **Prompt-to-Edit Re-Planner** | Natural language full-day schedule restructuring with optimistic state updates. |
-| 🎒 **Smart Packing Checklist** | AI-generated checklist adapted to weather forecast and scheduled activity categories with persistent checkboxes. |
-| 🧭 **Cultural & Survival Guide** | Destination briefing covering tipping customs, transit hacks, cultural dos & don'ts, phrases, and emergency contacts. |
-| 💰 **Budget & Expense Forecast** | Itemized cost projections with visual category percentage bars and local saving hacks. |
-| 🗺️ **Interactive Route Maps** | Geocoordinates rendered on interactive maps with chronological timeline connectors. |
-| 💾 **Offline Saved Trips Library** | Searchable, filterable trip manager with status toggling (`UPCOMING` / `COMPLETED`) and native sharing. |
+| **Itinerary Generator** | Multi-day travel plans with geocoded stops and category tagging. |
+| **Travel Copilot** | Chat assistant with quick suggestion chips, grounded in your trip parameters. |
+| **Activity Swapping** | Swap any individual activity with context-aware alternatives (indoor, budget, relaxed, foodie). |
+| **Day Re-Planner** | Restructure an entire day's schedule via presets or custom text prompts. |
+| **Smart Packing List** | Interactive checklist adapted to expected weather and scheduled activities. |
+| **Cultural & Practical Guide** | Destination briefings covering tipping norms, local transit, etiquette, and emergency numbers. |
+| **Budget Breakdown** | Itemized cost projections with visual category percentage bars. |
+| **Interactive Map View** | View daily activity locations plotted on an interactive map. |
+| **Saved Trips Library** | Searchable offline trip manager with status tracking (`Upcoming` / `Completed`). |
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Framework**: React Native 0.73.6 (CLI)
+- **Framework**: React Native 0.73.6
 - **Language**: TypeScript 5.0.4
-- **LLM Engine**: Google Generative AI SDK (`@google/generative-ai`)
-- **State Management**: Redux Toolkit (`@reduxjs/toolkit` & `react-redux`)
-- **Offline Storage**: `@react-native-async-storage/async-storage`
+- **AI Engine**: Google Generative AI SDK (`@google/generative-ai`)
+- **State Management**: Redux Toolkit & React-Redux
+- **Local Storage**: `@react-native-async-storage/async-storage`
 - **Navigation**: React Navigation (Native Stack & Bottom Tabs)
 - **Maps**: `react-native-maps`
-- **Icons**: `lucide-react-native` & `react-native-svg`
-- **Geocoding**: OpenStreetMap Nominatim API
+- **Weather API**: OpenWeatherMap
+- **Geocoding**: OpenStreetMap (Nominatim API)
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ItinerAI/
 ├── src/
-│   ├── components/       # Reusable UI components (MapRoute, BudgetSelector, etc.)
-│   ├── navigation/       # RootNavigator & typed navigation parameters
+│   ├── components/       # Reusable UI components (BudgetSelector, InterestChip, MapRoute, etc.)
+│   ├── navigation/       # Navigators and route parameter definitions
 │   ├── screens/          # Application screens
-│   │   ├── SplashScreen.tsx
-│   │   ├── OnboardingScreen.tsx
-│   │   ├── TripFormScreen.tsx
-│   │   ├── LoadingScreen.tsx
-│   │   ├── ItineraryDetailScreen.tsx  # Interactive day timeline & map preview
-│   │   ├── TripCopilotScreen.tsx      # Conversational grounded travel concierge
-│   │   ├── TripInsightsScreen.tsx     # Packing checklist, cultural guide & budget
-│   │   ├── ActivityDetailScreen.tsx   # Stop details & external map directions
-│   │   ├── TripSummaryScreen.tsx      # Overview metrics & sharing
-│   │   ├── SavedTripsScreen.tsx       # Offline trip manager & search
-│   │   └── ProfileScreen.tsx          # Traveler style & preferences
-│   ├── services/         # Core business logic & API services
-│   │   ├── llmService.ts              # Gemini API integrations & structured schemas
-│   │   ├── weatherService.ts          # OpenWeatherMap API & weather tips
+│   │   ├── TripFormScreen.tsx         # Trip configuration & preferences
+│   │   ├── ItineraryDetailScreen.tsx  # Interactive daily timeline and map
+│   │   ├── TripCopilotScreen.tsx      # Conversational travel assistant
+│   │   ├── TripInsightsScreen.tsx     # Packing checklist, culture, and budget
+│   │   ├── SavedTripsScreen.tsx       # Offline trip manager and search
+│   │   └── ...
+│   ├── services/         # External integrations & storage
+│   │   ├── llmService.ts              # Gemini API client & schemas
+│   │   ├── weatherService.ts          # OpenWeatherMap API & weather caching
 │   │   ├── storageService.ts          # AsyncStorage persistence layer
-│   │   └── placesService.ts           # OSM city autocomplete
-│   ├── store/            # Redux slices
-│   │   ├── index.ts
-│   │   ├── itinerarySlice.ts          # Active itinerary, copilot & insights
+│   │   └── placesService.ts           # OpenStreetMap geocoding autocomplete
+│   ├── store/            # Redux store and slices
+│   │   ├── itinerarySlice.ts          # Active itinerary and copilot state
 │   │   ├── savedTripsSlice.ts         # Saved trips library
 │   │   └── tripSlice.ts               # Trip creation form state
-│   ├── theme/            # Brand color palette & typography tokens
-│   ├── types/            # TypeScript interfaces & domain models
-│   └── utils/            # Responsive dimensions & formatting helpers
-├── App.tsx
-├── package.json
-└── README.md
+│   ├── theme/            # Color palettes, typography, and spacing
+│   ├── types/            # Shared TypeScript definitions
+│   └── utils/            # Dimension and formatting helpers
+├── __tests__/            # Jest unit and component test suites
+├── .github/workflows/    # CI configuration (lint, typecheck, tests, bundle check)
+└── package.json
 ```
 
 ---
 
-## 🚀 Getting Started
+## Testing & CI
+
+The test suite covers state management, offline storage, API integration, and key UI components using Jest and React Native Testing Library. Continuous integration runs automatically on GitHub Actions for every push and pull request to `main`.
+
+```bash
+# Run unit and component tests
+npm test
+
+# Run tests with code coverage report
+npm run test:coverage
+
+# Run TypeScript static type check
+npm run typecheck
+
+# Run ESLint validation
+npm run lint
+```
+
+| Test Suite | Focus Area |
+| :--- | :--- |
+| `storageService.test.ts` | Local persistence, weather TTL cache expiration, trip hydration |
+| `savedTripsSlice.test.ts` | Redux CRUD actions, search filtering, async thunks |
+| `itinerarySlice.test.ts` | Schedule modifications, activity updates, packing checklist state |
+| `weatherService.test.ts` | Weather response parsing and contextual travel advice |
+| `BudgetSelector.test.tsx` | Selection callbacks and accessibility attributes |
+| `InterestChip.test.tsx` | Active toggle states and icon rendering |
+| `App.test.tsx` | Root component mount and provider hierarchy |
+
+---
+
+## Getting Started
 
 ### Prerequisites
 - Node.js >= 18
-- React Native CLI development environment ([Environment Setup Guide](https://reactnative.dev/docs/environment-setup))
-- CocoaPods (for iOS)
-- Android Studio / Xcode
+- React Native CLI development setup ([Official Guide](https://reactnative.dev/docs/environment-setup))
+- Android Studio (for Android emulator) or Xcode + CocoaPods (for iOS simulator, macOS required)
 
-### 1. Clone & Install Dependencies
+### 1. Clone & Install
+
 ```bash
 git clone https://github.com/shubhi021/itiner-ai.git
 cd itiner-ai
 npm install
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the project root:
+### 2. Set Up Environment Variables
+
+Create a `.env` file in the root directory:
+
 ```env
-GEMINI_API_KEY=your_google_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 OPENWEATHERMAP_API_KEY=your_openweathermap_api_key_here
 ```
-> [!TIP]
-> You can obtain a free Gemini API key from [Google AI Studio](https://aistudio.google.com/).
 
-### 3. iOS Setup
+- Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/).
+- Get a free weather API key from [OpenWeatherMap](https://openweathermap.org/api).
+
+### 3. iOS Setup (macOS only)
+
 ```bash
 cd ios
 pod install
@@ -234,18 +183,20 @@ cd ..
 ```
 
 ### 4. Run the Application
+
 ```bash
-# Start Metro bundler
+# Start the Metro bundler
 npm start
 
-# Run on iOS Simulator
-npm run ios
-
-# Run on Android Emulator
+# Run on Android
 npm run android
+
+# Run on iOS
+npm run ios
 ```
 
 ---
 
-## 📜 License
-Distributed under the MIT License. See `LICENSE` for more information.
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
