@@ -1,5 +1,7 @@
 import {OPENWEATHERMAP_API_KEY} from '@env';
 
+const API_KEY = OPENWEATHERMAP_API_KEY;
+
 export interface WeatherData {
   temp: number; // in Celsius (rounded)
   condition: string; // e.g., "Clear", "Rain", "Clouds", "Snow", "Thunderstorm"
@@ -32,14 +34,14 @@ export const getWeather = async (
   coordinates?: {latitude: number; longitude: number},
 ): Promise<WeatherData | null> => {
   try {
-    if (!OPENWEATHERMAP_API_KEY) {
+    if (!API_KEY) {
       console.warn('OPENWEATHERMAP_API_KEY is not defined in .env');
       return null;
     }
 
     let url: string;
     if (coordinates && coordinates.latitude && coordinates.longitude) {
-      url = `https://api.openweathermap.org/data/2.5/weather?lat=${coordinates.latitude}&lon=${coordinates.longitude}&units=metric&appid=${OPENWEATHERMAP_API_KEY}`;
+      url = `https://api.openweathermap.org/data/2.5/weather?lat=${coordinates.latitude}&lon=${coordinates.longitude}&units=metric&appid=${API_KEY}`;
     } else {
       const cleanCity = sanitizeCityName(destination);
       if (!cleanCity) {
@@ -47,7 +49,7 @@ export const getWeather = async (
       }
       url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
         cleanCity,
-      )}&units=metric&appid=${OPENWEATHERMAP_API_KEY}`;
+      )}&units=metric&appid=${API_KEY}`;
     }
 
     const response = await fetch(url);
@@ -58,7 +60,7 @@ export const getWeather = async (
         if (cleanCity) {
           const fallbackUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
             cleanCity,
-          )}&units=metric&appid=${OPENWEATHERMAP_API_KEY}`;
+          )}&units=metric&appid=${API_KEY}`;
           const fallbackResponse = await fetch(fallbackUrl);
           if (fallbackResponse.ok) {
             const data = await fallbackResponse.json();

@@ -71,6 +71,10 @@ describe('weatherService', () => {
   describe('getWeather API integration', () => {
     const originalFetch = global.fetch;
 
+    beforeEach(() => {
+      global.fetch = jest.fn();
+    });
+
     afterEach(() => {
       global.fetch = originalFetch;
     });
@@ -110,13 +114,40 @@ describe('weatherService', () => {
       expect(result).toBeNull();
     });
 
-    it('handles network exceptions without crashing', async () => {
+    it('returns null when destination is empty and no coordinates are provided', async () => {
+      const result = await getWeather('');
+      expect(result).toBeNull();
+    });
+
+    it('falls back to city name search when coordinate search returns non-200', async () => {
+      const mockWeatherData = {
+        main: {temp: 20.4, humidity: 60},
+        weather: [
+          {main: 'Clouds', description: 'scattered clouds', icon: '03d'},
+        ],
+        wind: {speed: 3.2},
+      };
+
       global.fetch = jest
         .fn()
-        .mockRejectedValue(new Error('Network connection timeout'));
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockWeatherData,
+        } as Response);
 
-      const result = await getWeather('Rome, Italy');
-      expect(result).toBeNull();
+      const result = await getWeather('Kyoto, Japan', {
+        latitude: 999,
+        longitude: 999,
+      });
+
+      expect(result).not.toBeNull();
+      expect(result?.condition).toBe('Clouds');
+      expect(global.fetch).toHaveBeenCalledTimes(2);
     });
   });
 });
