@@ -81,11 +81,11 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('react-native-maps', () => {
   const React = require('react');
   const {View} = require('react-native');
-  const MockMapView = props => (
-    <View testID="mock-map-view" {...props}>
+  const MockMapView = React.forwardRef((props, ref) => (
+    <View ref={ref} testID="mock-map-view" {...props}>
       {props.children}
     </View>
-  );
+  ));
   const MockMarker = props => (
     <View testID="mock-map-marker" {...props}>
       {props.children}
@@ -154,6 +154,26 @@ jest.mock('react-native-screens', () => {
     SearchBar: View,
     FullWindowOverlay: View,
   };
+});
+
+// Mock react-native-svg
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const {View} = require('react-native');
+  return new Proxy(
+    {},
+    {
+      get: (_target, prop) => {
+        if (prop === '__esModule') {
+          return true;
+        }
+        if (prop === 'default') {
+          return props => <View testID="mock-svg" {...props} />;
+        }
+        return props => <View testID={`mock-svg-${String(prop)}`} {...props} />;
+      },
+    },
+  );
 });
 
 // Mock virtual @env module
