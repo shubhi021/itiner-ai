@@ -200,5 +200,181 @@ describe('itinerarySlice', () => {
       expect(state.currentItinerary).toEqual(mockItinerary);
       expect(state.weather).toEqual(mockWeather);
     });
+
+    it('handles fetchWeatherForTrip pending, fulfilled, rejected', () => {
+      let state = itineraryReducer(initialState, {
+        type: 'itinerary/fetchWeatherForTrip/pending',
+      });
+      expect(state.weatherLoading).toBe(true);
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchWeatherForTrip/fulfilled',
+        payload: mockWeather,
+      });
+      expect(state.weatherLoading).toBe(false);
+      expect(state.weather).toEqual(mockWeather);
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchWeatherForTrip/rejected',
+      });
+      expect(state.weatherLoading).toBe(false);
+    });
+
+    it('handles pivotActivity pending, fulfilled, rejected', () => {
+      const preloadedState: ItineraryState = {
+        ...initialState,
+        currentItinerary: JSON.parse(JSON.stringify(mockItinerary)),
+      };
+
+      let state = itineraryReducer(preloadedState, {
+        type: 'itinerary/pivotActivity/pending',
+        meta: {arg: {dayIndex: 0, activityIndex: 0}},
+      });
+      expect(state.pivotingActivity).toEqual({dayIndex: 0, activityIndex: 0});
+
+      const replacementActivity: Activity = {
+        name: 'Musee d Orsay',
+        time: '10:00 AM',
+        description: 'Famous Impressionist museum.',
+        location: 'Paris, France',
+        category: 'landmark',
+      };
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/pivotActivity/fulfilled',
+        payload: {
+          dayIndex: 0,
+          activityIndex: 0,
+          activity: replacementActivity,
+        },
+      });
+      expect(state.pivotingActivity).toBeNull();
+      expect(state.currentItinerary?.days[0].activities[0].name).toBe(
+        'Musee d Orsay',
+      );
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/pivotActivity/rejected',
+      });
+      expect(state.pivotingActivity).toBeNull();
+    });
+
+    it('handles optimizeDay pending, fulfilled, rejected', () => {
+      const preloadedState: ItineraryState = {
+        ...initialState,
+        currentItinerary: JSON.parse(JSON.stringify(mockItinerary)),
+      };
+
+      let state = itineraryReducer(preloadedState, {
+        type: 'itinerary/optimizeDay/pending',
+      });
+      expect(state.optimizingDay).toBe(true);
+
+      const optimizedActivities: Activity[] = [
+        {
+          name: 'Morning Bakery',
+          time: '08:30 AM',
+          description: 'Croissants',
+          location: 'Paris',
+          category: 'food',
+        },
+      ];
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/optimizeDay/fulfilled',
+        payload: {
+          dayIndex: 0,
+          activities: optimizedActivities,
+        },
+      });
+      expect(state.optimizingDay).toBe(false);
+      expect(state.currentItinerary?.days[0].activities).toEqual(
+        optimizedActivities,
+      );
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/optimizeDay/rejected',
+        payload: 'Re-optimization failed',
+      });
+      expect(state.optimizingDay).toBe(false);
+      expect(state.error).toBe('Re-optimization failed');
+    });
+
+    it('handles fetchPackingList pending, fulfilled, rejected', () => {
+      let state = itineraryReducer(initialState, {
+        type: 'itinerary/fetchPackingList/pending',
+      });
+      expect(state.packingLoading).toBe(true);
+
+      const mockList: PackingItem[] = [
+        {id: '1', name: 'Passport', category: 'Documents', packed: true},
+      ];
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchPackingList/fulfilled',
+        payload: mockList,
+      });
+      expect(state.packingLoading).toBe(false);
+      expect(state.packingList).toEqual(mockList);
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchPackingList/rejected',
+      });
+      expect(state.packingLoading).toBe(false);
+    });
+
+    it('handles fetchDestinationInsights pending, fulfilled, rejected', () => {
+      let state = itineraryReducer(initialState, {
+        type: 'itinerary/fetchDestinationInsights/pending',
+      });
+      expect(state.insightsLoading).toBe(true);
+
+      const mockInsights = {
+        tippingCulture: 'Tipping is optional',
+        transitTips: ['Use the Metro'],
+        culturalEtiquette: {dos: ['Say Bonjour'], donts: ['Speak loudly']},
+        emergencyNumbers: {police: '17', ambulance: '15', general: '112'},
+        essentialPhrases: [{phrase: 'Merci', translation: 'Thank you'}],
+      };
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchDestinationInsights/fulfilled',
+        payload: mockInsights,
+      });
+      expect(state.insightsLoading).toBe(false);
+      expect(state.insights).toEqual(mockInsights);
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchDestinationInsights/rejected',
+      });
+      expect(state.insightsLoading).toBe(false);
+    });
+
+    it('handles fetchBudgetForecast pending, fulfilled, rejected', () => {
+      let state = itineraryReducer(initialState, {
+        type: 'itinerary/fetchBudgetForecast/pending',
+      });
+      expect(state.forecastLoading).toBe(true);
+
+      const mockForecast = {
+        totalEstimated: '€750',
+        currency: 'EUR',
+        dailyAverage: '€150',
+        categories: [],
+        moneySavingTips: ['Museum pass'],
+      };
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchBudgetForecast/fulfilled',
+        payload: mockForecast,
+      });
+      expect(state.forecastLoading).toBe(false);
+      expect(state.budgetForecast).toEqual(mockForecast);
+
+      state = itineraryReducer(state, {
+        type: 'itinerary/fetchBudgetForecast/rejected',
+      });
+      expect(state.forecastLoading).toBe(false);
+    });
   });
 });

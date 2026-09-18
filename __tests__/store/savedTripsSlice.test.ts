@@ -137,5 +137,59 @@ describe('savedTripsSlice', () => {
         }),
       );
     });
+
+    it('handles saveTrip.fulfilled when updating a trip at index > 0', () => {
+      const otherTrip: SavedTrip = {...mockTrip, id: 'trip_0'};
+      const updatedTrip: SavedTrip = {...mockTrip, title: 'Updated Paris'};
+      const preloadedState: SavedTripsState = {
+        ...initialState,
+        trips: [otherTrip, mockTrip],
+      };
+      const state = savedTripsReducer(preloadedState, {
+        type: saveTrip.fulfilled.type,
+        payload: updatedTrip,
+      });
+      expect(state.trips).toHaveLength(2);
+      expect(state.trips[1].title).toBe('Updated Paris');
+    });
+
+    it('dispatches deleteTrip successfully and on error', async () => {
+      (storageService.deleteTrip as jest.Mock).mockResolvedValueOnce(undefined);
+      const dispatch = jest.fn();
+      let thunk = deleteTrip('trip_abc');
+      await thunk(dispatch, () => ({}), undefined);
+      expect(storageService.deleteTrip).toHaveBeenCalledWith('trip_abc');
+
+      (storageService.deleteTrip as jest.Mock).mockRejectedValueOnce(
+        new Error('Disk error'),
+      );
+      thunk = deleteTrip('trip_abc');
+      await thunk(dispatch, () => ({}), undefined);
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({type: deleteTrip.rejected.type}),
+      );
+    });
+
+    it('dispatches updateTripStatus successfully and on error', async () => {
+      (storageService.updateTripStatus as jest.Mock).mockResolvedValueOnce(
+        undefined,
+      );
+      const dispatch = jest.fn();
+      let thunk = updateTripStatus({id: 'trip_abc', status: 'COMPLETED'});
+      await thunk(dispatch, () => ({}), undefined);
+      expect(storageService.updateTripStatus).toHaveBeenCalledWith(
+        'trip_abc',
+        'COMPLETED',
+      );
+
+      (storageService.updateTripStatus as jest.Mock).mockRejectedValueOnce(
+        new Error('Status error'),
+      );
+      thunk = updateTripStatus({id: 'trip_abc', status: 'COMPLETED'});
+      await thunk(dispatch, () => ({}), undefined);
+      expect(dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({type: updateTripStatus.rejected.type}),
+      );
+    });
   });
 });
