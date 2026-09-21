@@ -83,7 +83,7 @@ export const SplashScreen: React.FC<Props> = ({navigation}) => {
     ]).start();
 
     // Gentle pulse loop behind logo
-    Animated.loop(
+    const loopAnim = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.14,
@@ -98,7 +98,8 @@ export const SplashScreen: React.FC<Props> = ({navigation}) => {
           useNativeDriver: true,
         }),
       ]),
-    ).start();
+    );
+    loopAnim.start();
 
     // Automatic navigation
     const timer = setTimeout(async () => {
@@ -116,7 +117,10 @@ export const SplashScreen: React.FC<Props> = ({navigation}) => {
       }
     }, 2100);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      loopAnim.stop();
+    };
   }, [navigation, fadeAnim, scaleAnim, pulseAnim, progressAnim]);
 
   const progressWidth = progressAnim.interpolate({
