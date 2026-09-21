@@ -44,12 +44,13 @@ const MapRouteComponent: React.FC<MapRouteProps> = ({activities}) => {
 
   if (coordinates.length === 0) {
     // Fallback if no valid coordinates
-    return <View style={[styles.container, {backgroundColor: '#E5E7EB'}]} />;
+    return <View style={styles.fallbackContainer} testID="map-fallback" />;
   }
 
   return (
     <MapView
       ref={mapRef}
+      testID="map-view"
       provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
       style={styles.container}
       initialRegion={{
@@ -84,5 +85,9 @@ export const MapRoute = React.memo(MapRouteComponent);
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
+  },
+  fallbackContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#E5E7EB',
   },
 });
