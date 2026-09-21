@@ -552,7 +552,7 @@ export const ProfileScreen = () => {
             })}
           </View>
 
-          <View style={[styles.settingDivider, {marginVertical: 12}]} />
+          <View style={styles.settingDividerLarge} />
 
           {/* Currency Setting */}
           <TouchableOpacity
@@ -1055,6 +1055,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F1F5F9',
     marginVertical: 4,
+  },
+  settingDividerLarge: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 12,
   },
   footerContainer: {
     alignItems: 'center',
