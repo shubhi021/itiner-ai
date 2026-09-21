@@ -22,6 +22,18 @@ import {Map, Bookmark, User} from 'lucide-react-native';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+const PlanTabIcon = ({color, size}: {color: string; size: number}) => (
+  <Map color={color} size={size} />
+);
+
+const TripsTabIcon = ({color, size}: {color: string; size: number}) => (
+  <Bookmark color={color} size={size} />
+);
+
+const ProfileTabIcon = ({color, size}: {color: string; size: number}) => (
+  <User color={color} size={size} />
+);
+
 const MainTabs = () => {
   return (
     <Tab.Navigator
@@ -35,21 +47,21 @@ const MainTabs = () => {
         name="Plan"
         component={TripFormScreen}
         options={{
-          tabBarIcon: ({color, size}) => <Map color={color} size={size} />,
+          tabBarIcon: PlanTabIcon,
         }}
       />
       <Tab.Screen
         name="Trips"
         component={SavedTripsScreen}
         options={{
-          tabBarIcon: ({color, size}) => <Bookmark color={color} size={size} />,
+          tabBarIcon: TripsTabIcon,
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({color, size}) => <User color={color} size={size} />,
+          tabBarIcon: ProfileTabIcon,
         }}
       />
     </Tab.Navigator>
