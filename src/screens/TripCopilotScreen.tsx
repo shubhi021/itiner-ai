@@ -112,6 +112,192 @@ const SUGGESTION_CATEGORIES: SuggestionCategory[] = [
   },
 ];
 
+// High-Grade Markdown, Bullet & Number List Renderer
+const renderFormattedText = (text: string, isUser: boolean) => {
+  const lines = text.split('\n');
+
+  return (
+    <View style={styles.textBlockContainer}>
+      {lines.map((line, lineIndex) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <View key={lineIndex} style={styles.lineSpacer} />;
+        }
+
+        // Bullet line detection (- or * or •)
+        const isBullet =
+          trimmed.startsWith('- ') ||
+          trimmed.startsWith('* ') ||
+          trimmed.startsWith('• ');
+
+        // Numbered list detection (1. 2. etc)
+        const numberMatch = trimmed.match(/^(\d+)\.\s+/);
+
+        const content = isBullet
+          ? trimmed.replace(/^[-*•]\s+/, '')
+          : numberMatch
+          ? trimmed.slice(numberMatch[0].length)
+          : trimmed;
+
+        // Parse bold **text** within content
+        const parts = content.split(/(\*\*.*?\*\*)/g);
+
+        return (
+          <View
+            key={lineIndex}
+            style={[
+              styles.lineRow,
+              isBullet && styles.bulletRow,
+              numberMatch && styles.numberRow,
+            ]}>
+            {isBullet && !isUser && <View style={styles.bulletDot} />}
+            {numberMatch && !isUser && (
+              <View style={styles.numberBadge}>
+                <Text style={styles.numberBadgeText}>{numberMatch[1]}</Text>
+              </View>
+            )}
+            <Text
+              style={[
+                isUser ? styles.userMessageText : styles.modelMessageText,
+                (isBullet || numberMatch) && styles.listLineText,
+              ]}>
+              {parts.map((part, pIdx) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return (
+                    <Text
+                      key={pIdx}
+                      style={
+                        isUser ? styles.userBoldText : styles.modelBoldText
+                      }>
+                      {part.slice(2, -2)}
+                    </Text>
+                  );
+                }
+                return part;
+              })}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
+interface ChatMessageItemProps {
+  item: ChatMessage;
+  destination: string;
+  onOpenDirections: (name: string, lat?: number, lon?: number) => void;
+  onShareMessage: (text: string) => void;
+}
+
+const ChatMessageItem = React.memo<ChatMessageItemProps>(
+  ({item, destination, onOpenDirections, onShareMessage}) => {
+    const isUser = item.role === 'user';
+    return (
+      <View
+        style={[
+          styles.messageRow,
+          isUser ? styles.messageRowUser : styles.messageRowModel,
+        ]}>
+        {!isUser && (
+          <View style={styles.botAvatarBadge}>
+            <Sparkles size={14} color="#FFFFFF" />
+          </View>
+        )}
+        <View
+          style={[
+            styles.messageBubble,
+            isUser ? styles.userBubble : styles.modelBubble,
+          ]}>
+          {/* Agent Action Card (if tools executed) */}
+          {item.actions && item.actions.length > 0 && (
+            <View style={styles.actionCardContainer}>
+              <View style={styles.actionCardHeader}>
+                <Zap size={13} color="#FF6B4A" />
+                <Text style={styles.actionCardHeaderTitle}>
+                  Autonomous Agent Action
+                </Text>
+              </View>
+              {item.actions.map(action => (
+                <View key={action.id} style={styles.actionItemRow}>
+                  <View style={styles.actionItemIconBadge}>
+                    {action.type === 'add_activity' && (
+                      <PlusCircle size={13} color="#10B981" />
+                    )}
+                    {action.type === 'remove_activity' && (
+                      <Trash2 size={13} color="#EF4444" />
+                    )}
+                    {action.type === 'open_directions' && (
+                      <Navigation size={13} color="#3B82F6" />
+                    )}
+                    {action.type === 'toggle_packing' && (
+                      <CheckCircle2 size={13} color="#8B5CF6" />
+                    )}
+                  </View>
+                  <View style={styles.actionItemTextCol}>
+                    <Text style={styles.actionItemTitle}>{action.title}</Text>
+                    {action.details ? (
+                      <Text style={styles.actionItemDetails}>
+                        {action.details}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {action.type === 'open_directions' && (
+                    <TouchableOpacity
+                      style={styles.actionItemButton}
+                      activeOpacity={0.7}
+                      onPress={() =>
+                        onOpenDirections(
+                          action.metadata?.destinationName || destination,
+                          action.metadata?.latitude,
+                          action.metadata?.longitude,
+                        )
+                      }>
+                      <Text style={styles.actionItemButtonText}>Maps</Text>
+                      <ExternalLink size={10} color="#2563EB" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {renderFormattedText(item.text, isUser)}
+
+          {/* Message Bottom Action Bar */}
+          <View style={styles.messageFooterRow}>
+            {!isUser && (
+              <TouchableOpacity
+                style={styles.shareBtn}
+                activeOpacity={0.6}
+                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+                onPress={() => onShareMessage(item.text)}>
+                <Share2 size={12} color="#94A3B8" />
+                <Text style={styles.shareBtnText}>Share</Text>
+              </TouchableOpacity>
+            )}
+            <Text
+              style={[
+                styles.messageTime,
+                isUser ? styles.userMessageTime : styles.modelMessageTime,
+              ]}>
+              {new Date(item.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
+          </View>
+        </View>
+        {isUser && (
+          <View style={styles.userAvatarBadge}>
+            <User size={14} color="#FFFFFF" />
+          </View>
+        )}
+      </View>
+    );
+  },
+);
+
 export const TripCopilotScreen: React.FC<Props> = ({route, navigation}) => {
   const {destination, daysCount, budget, tripId} = route.params;
   const dispatch = useDispatch();
@@ -416,182 +602,17 @@ export const TripCopilotScreen: React.FC<Props> = ({route, navigation}) => {
     setShowScrollBottom(!isNearBottom && contentOffset.y > 160);
   };
 
-  // High-Grade Markdown, Bullet & Number List Renderer
-  const renderFormattedText = (text: string, isUser: boolean) => {
-    const lines = text.split('\n');
-
-    return (
-      <View style={styles.textBlockContainer}>
-        {lines.map((line, lineIndex) => {
-          const trimmed = line.trim();
-          if (!trimmed) {
-            return <View key={lineIndex} style={styles.lineSpacer} />;
-          }
-
-          // Bullet line detection (- or * or •)
-          const isBullet =
-            trimmed.startsWith('- ') ||
-            trimmed.startsWith('* ') ||
-            trimmed.startsWith('• ');
-
-          // Numbered list detection (1. 2. etc)
-          const numberMatch = trimmed.match(/^(\d+)\.\s+/);
-
-          const content = isBullet
-            ? trimmed.replace(/^[-*•]\s+/, '')
-            : numberMatch
-            ? trimmed.slice(numberMatch[0].length)
-            : trimmed;
-
-          // Parse bold **text** within content
-          const parts = content.split(/(\*\*.*?\*\*)/g);
-
-          return (
-            <View
-              key={lineIndex}
-              style={[
-                styles.lineRow,
-                isBullet && styles.bulletRow,
-                numberMatch && styles.numberRow,
-              ]}>
-              {isBullet && !isUser && <View style={styles.bulletDot} />}
-              {numberMatch && !isUser && (
-                <View style={styles.numberBadge}>
-                  <Text style={styles.numberBadgeText}>{numberMatch[1]}</Text>
-                </View>
-              )}
-              <Text
-                style={[
-                  isUser ? styles.userMessageText : styles.modelMessageText,
-                  (isBullet || numberMatch) && styles.listLineText,
-                ]}>
-                {parts.map((part, pIdx) => {
-                  if (part.startsWith('**') && part.endsWith('**')) {
-                    return (
-                      <Text
-                        key={pIdx}
-                        style={
-                          isUser ? styles.userBoldText : styles.modelBoldText
-                        }>
-                        {part.slice(2, -2)}
-                      </Text>
-                    );
-                  }
-                  return part;
-                })}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
-    );
-  };
-
-  const renderMessageItem = ({item}: {item: ChatMessage}) => {
-    const isUser = item.role === 'user';
-    return (
-      <View
-        style={[
-          styles.messageRow,
-          isUser ? styles.messageRowUser : styles.messageRowModel,
-        ]}>
-        {!isUser && (
-          <View style={styles.botAvatarBadge}>
-            <Sparkles size={14} color="#FFFFFF" />
-          </View>
-        )}
-        <View
-          style={[
-            styles.messageBubble,
-            isUser ? styles.userBubble : styles.modelBubble,
-          ]}>
-          {/* Agent Action Card (if tools executed) */}
-          {item.actions && item.actions.length > 0 && (
-            <View style={styles.actionCardContainer}>
-              <View style={styles.actionCardHeader}>
-                <Zap size={13} color="#FF6B4A" />
-                <Text style={styles.actionCardHeaderTitle}>
-                  Autonomous Agent Action
-                </Text>
-              </View>
-              {item.actions.map(action => (
-                <View key={action.id} style={styles.actionItemRow}>
-                  <View style={styles.actionItemIconBadge}>
-                    {action.type === 'add_activity' && (
-                      <PlusCircle size={13} color="#10B981" />
-                    )}
-                    {action.type === 'remove_activity' && (
-                      <Trash2 size={13} color="#EF4444" />
-                    )}
-                    {action.type === 'open_directions' && (
-                      <Navigation size={13} color="#3B82F6" />
-                    )}
-                    {action.type === 'toggle_packing' && (
-                      <CheckCircle2 size={13} color="#8B5CF6" />
-                    )}
-                  </View>
-                  <View style={styles.actionItemTextCol}>
-                    <Text style={styles.actionItemTitle}>{action.title}</Text>
-                    {action.details ? (
-                      <Text style={styles.actionItemDetails}>
-                        {action.details}
-                      </Text>
-                    ) : null}
-                  </View>
-                  {action.type === 'open_directions' && (
-                    <TouchableOpacity
-                      style={styles.actionItemButton}
-                      activeOpacity={0.7}
-                      onPress={() =>
-                        handleOpenDirections(
-                          action.metadata?.destinationName || destination,
-                          action.metadata?.latitude,
-                          action.metadata?.longitude,
-                        )
-                      }>
-                      <Text style={styles.actionItemButtonText}>Maps</Text>
-                      <ExternalLink size={10} color="#2563EB" />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              ))}
-            </View>
-          )}
-
-          {renderFormattedText(item.text, isUser)}
-
-          {/* Message Bottom Action Bar */}
-          <View style={styles.messageFooterRow}>
-            {!isUser && (
-              <TouchableOpacity
-                style={styles.shareBtn}
-                activeOpacity={0.6}
-                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-                onPress={() => handleShareMessage(item.text)}>
-                <Share2 size={12} color="#94A3B8" />
-                <Text style={styles.shareBtnText}>Share</Text>
-              </TouchableOpacity>
-            )}
-            <Text
-              style={[
-                styles.messageTime,
-                isUser ? styles.userMessageTime : styles.modelMessageTime,
-              ]}>
-              {new Date(item.timestamp).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
-          </View>
-        </View>
-        {isUser && (
-          <View style={styles.userAvatarBadge}>
-            <User size={14} color="#FFFFFF" />
-          </View>
-        )}
-      </View>
-    );
-  };
+  const renderMessageItem = useCallback(
+    ({item}: {item: ChatMessage}) => (
+      <ChatMessageItem
+        item={item}
+        destination={destination}
+        onOpenDirections={handleOpenDirections}
+        onShareMessage={handleShareMessage}
+      />
+    ),
+    [destination, handleOpenDirections, handleShareMessage],
+  );
 
   const selectedCategoryData = useMemo(() => {
     return (

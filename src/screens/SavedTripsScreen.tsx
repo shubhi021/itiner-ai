@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, {useState, useEffect, useMemo, useCallback} from 'react';
 import {
   View,
   Text,
@@ -43,6 +43,95 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList>
 >;
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'UPCOMING':
+      return '#0F4C5C';
+    case 'DRAFT':
+      return '#FF6B4A';
+    case 'COMPLETED':
+      return '#6B7280';
+    default:
+      return '#6B7280';
+  }
+};
+
+const getStatusBgColor = (status: string) => {
+  switch (status) {
+    case 'UPCOMING':
+      return '#E6F4F7';
+    case 'DRAFT':
+      return '#FFF1F2';
+    case 'COMPLETED':
+      return '#F3F4F6';
+    default:
+      return '#F3F4F6';
+  }
+};
+
+interface TripCardItemProps {
+  item: SavedTrip;
+  onSelect: (trip: SavedTrip) => void;
+  onOpenMenu: (trip: SavedTrip) => void;
+}
+
+const TripCardItem = React.memo<TripCardItemProps>(
+  ({item, onSelect, onOpenMenu}) => {
+    return (
+      <TouchableOpacity
+        style={styles.cardContainer}
+        activeOpacity={0.85}
+        testID={`saved-trip-card-${item.id}`}
+        onPress={() => onSelect(item)}>
+        <Image
+          source={{uri: item.imageUrl}}
+          style={[
+            styles.cardImage,
+            item.status === 'COMPLETED' && styles.cardImageCompleted,
+          ]}
+        />
+        <View style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <View
+              style={[
+                styles.statusBadge,
+                {backgroundColor: getStatusBgColor(item.status)},
+              ]}>
+              <Text
+                style={[
+                  styles.statusText,
+                  {color: getStatusColor(item.status)},
+                ]}>
+                {item.status}
+              </Text>
+            </View>
+            <Text style={styles.durationText}>{item.duration}</Text>
+          </View>
+
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+
+          <View style={styles.locationRow}>
+            <MapPin size={12} color="#9CA3AF" style={styles.locPinIcon} />
+            <Text style={styles.cardDates} numberOfLines={1}>
+              {item.destination}
+            </Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={styles.moreButton}
+          testID={`more-btn-${item.id}`}
+          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+          onPress={() => onOpenMenu(item)}>
+          <MoreVertical size={20} color="#9CA3AF" />
+        </TouchableOpacity>
+      </TouchableOpacity>
+    );
+  },
+);
+
 export const SavedTripsScreen: React.FC<Props> = ({navigation}) => {
   const dispatch = useDispatch<AppDispatch>();
   const {trips, loading, activeFilter, searchQuery} = useSelector(
@@ -84,157 +173,100 @@ export const SavedTripsScreen: React.FC<Props> = ({navigation}) => {
     });
   }, [trips, activeFilter, searchQuery]);
 
-  const handleSelectTrip = (trip: SavedTrip) => {
-    dispatch(setItinerary(trip.itinerary));
-    if (trip.weather) {
-      dispatch(setWeather(trip.weather));
-    }
-    navigation.navigate('ItineraryDetail', {
-      tripId: trip.id,
-      isOffline: true,
-    });
-  };
+  const handleSelectTrip = useCallback(
+    (trip: SavedTrip) => {
+      dispatch(setItinerary(trip.itinerary));
+      if (trip.weather) {
+        dispatch(setWeather(trip.weather));
+      }
+      navigation.navigate('ItineraryDetail', {
+        tripId: trip.id,
+        isOffline: true,
+      });
+    },
+    [dispatch, navigation],
+  );
 
-  const handleOpenActionMenu = (trip: SavedTrip) => {
-    const isCompleted = trip.status === 'COMPLETED';
+  const handleOpenActionMenu = useCallback(
+    (trip: SavedTrip) => {
+      const isCompleted = trip.status === 'COMPLETED';
 
-    Alert.alert(
-      trip.title,
-      `${trip.destination} • ${trip.duration}`,
-      [
-        {
-          text: isCompleted ? 'Mark as Upcoming' : 'Mark as Completed',
-          onPress: () => {
-            dispatch(
-              updateTripStatus({
-                id: trip.id,
-                status: isCompleted ? 'UPCOMING' : 'COMPLETED',
-              }),
-            );
+      Alert.alert(
+        trip.title,
+        `${trip.destination} • ${trip.duration}`,
+        [
+          {
+            text: isCompleted ? 'Mark as Upcoming' : 'Mark as Completed',
+            onPress: () => {
+              dispatch(
+                updateTripStatus({
+                  id: trip.id,
+                  status: isCompleted ? 'UPCOMING' : 'COMPLETED',
+                }),
+              );
+            },
           },
-        },
-        {
-          text: 'Share Trip',
-          onPress: async () => {
-            try {
-              const shareSummary =
-                `${trip.title} (${trip.destination})\n${trip.duration} Day-by-Day Journey:\n\n` +
-                trip.itinerary.days
-                  .map(
-                    d =>
-                      `Day ${d.day}:\n` +
-                      d.activities
-                        .map(a => `• ${a.time}: ${a.name} (${a.location})`)
-                        .join('\n'),
-                  )
-                  .join('\n\n') +
-                '\n\nPlanned with ItinerAI';
+          {
+            text: 'Share Trip',
+            onPress: async () => {
+              try {
+                const shareSummary =
+                  `${trip.title} (${trip.destination})\n${trip.duration} Day-by-Day Journey:\n\n` +
+                  trip.itinerary.days
+                    .map(
+                      d =>
+                        `Day ${d.day}:\n` +
+                        d.activities
+                          .map(a => `• ${a.time}: ${a.name} (${a.location})`)
+                          .join('\n'),
+                    )
+                    .join('\n\n') +
+                  '\n\nPlanned with ItinerAI';
 
-              await Share.share({
-                message: shareSummary,
-                title: trip.title,
-              });
-            } catch (err) {
-              console.warn('Share error:', err);
-            }
+                await Share.share({
+                  message: shareSummary,
+                  title: trip.title,
+                });
+              } catch (err) {
+                console.warn('Share error:', err);
+              }
+            },
           },
-        },
-        {
-          text: 'Delete Trip',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Delete Trip',
-              `Are you sure you want to remove ${trip.title} from offline storage?`,
-              [
-                {text: 'Cancel', style: 'cancel'},
-                {
-                  text: 'Delete',
-                  style: 'destructive',
-                  onPress: () => dispatch(deleteTrip(trip.id)),
-                },
-              ],
-            );
+          {
+            text: 'Delete Trip',
+            style: 'destructive',
+            onPress: () => {
+              Alert.alert(
+                'Delete Trip',
+                `Are you sure you want to remove ${trip.title} from offline storage?`,
+                [
+                  {text: 'Cancel', style: 'cancel'},
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => dispatch(deleteTrip(trip.id)),
+                  },
+                ],
+              );
+            },
           },
-        },
-        {text: 'Cancel', style: 'cancel'},
-      ],
-      {cancelable: true},
-    );
-  };
+          {text: 'Cancel', style: 'cancel'},
+        ],
+        {cancelable: true},
+      );
+    },
+    [dispatch],
+  );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'UPCOMING':
-        return '#0F4C5C';
-      case 'DRAFT':
-        return '#FF6B4A';
-      case 'COMPLETED':
-        return '#6B7280';
-      default:
-        return '#6B7280';
-    }
-  };
-
-  const getStatusBgColor = (status: string) => {
-    switch (status) {
-      case 'UPCOMING':
-        return '#E6F4F7';
-      case 'DRAFT':
-        return '#FFF1F2';
-      case 'COMPLETED':
-        return '#F3F4F6';
-      default:
-        return '#F3F4F6';
-    }
-  };
-
-  const renderTripCard = ({item}: {item: SavedTrip}) => (
-    <TouchableOpacity
-      style={styles.cardContainer}
-      activeOpacity={0.85}
-      onPress={() => handleSelectTrip(item)}>
-      <Image
-        source={{uri: item.imageUrl}}
-        style={[
-          styles.cardImage,
-          item.status === 'COMPLETED' && {opacity: 0.65},
-        ]}
+  const renderTripCard = useCallback(
+    ({item}: {item: SavedTrip}) => (
+      <TripCardItem
+        item={item}
+        onSelect={handleSelectTrip}
+        onOpenMenu={handleOpenActionMenu}
       />
-      <View style={styles.cardContent}>
-        <View style={styles.cardHeader}>
-          <View
-            style={[
-              styles.statusBadge,
-              {backgroundColor: getStatusBgColor(item.status)},
-            ]}>
-            <Text
-              style={[styles.statusText, {color: getStatusColor(item.status)}]}>
-              {item.status}
-            </Text>
-          </View>
-          <Text style={styles.durationText}>{item.duration}</Text>
-        </View>
-
-        <Text style={styles.cardTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-
-        <View style={styles.locationRow}>
-          <MapPin size={12} color="#9CA3AF" style={styles.locPinIcon} />
-          <Text style={styles.cardDates} numberOfLines={1}>
-            {item.destination}
-          </Text>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        style={styles.moreButton}
-        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-        onPress={() => handleOpenActionMenu(item)}>
-        <MoreVertical size={20} color="#9CA3AF" />
-      </TouchableOpacity>
-    </TouchableOpacity>
+    ),
+    [handleSelectTrip, handleOpenActionMenu],
   );
 
   return (
@@ -333,7 +365,11 @@ export const SavedTripsScreen: React.FC<Props> = ({navigation}) => {
                 style={styles.emptyCtaButton}
                 activeOpacity={0.8}
                 onPress={() => navigation.navigate('Plan')}>
-                <Sparkles size={16} color="#FFFFFF" style={{marginRight: 6}} />
+                <Sparkles
+                  size={16}
+                  color="#FFFFFF"
+                  style={styles.emptyCtaIcon}
+                />
                 <Text style={styles.emptyCtaText}>Plan a New Trip</Text>
               </TouchableOpacity>
             )}
@@ -482,6 +518,9 @@ const styles = StyleSheet.create({
     marginRight: 14,
     backgroundColor: '#E2E8F0',
   },
+  cardImageCompleted: {
+    opacity: 0.65,
+  },
   cardContent: {
     flex: 1,
     justifyContent: 'center',
@@ -586,5 +625,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: fp(1.5),
     fontWeight: '700',
+  },
+  emptyCtaIcon: {
+    marginRight: 6,
   },
 });
