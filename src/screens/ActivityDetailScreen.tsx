@@ -212,7 +212,11 @@ export const ActivityDetailScreen: React.FC<Props> = ({route, navigation}) => {
               </Text>
             </View>
             <View style={styles.tagSaved}>
-              <CheckCircle color="#10B981" size={14} style={{marginRight: 4}} />
+              <CheckCircle
+                color="#10B981"
+                size={14}
+                style={styles.tagSavedIcon}
+              />
               <Text style={styles.tagSavedText}>INCLUDED IN ITINERARY</Text>
             </View>
           </View>
@@ -222,7 +226,7 @@ export const ActivityDetailScreen: React.FC<Props> = ({route, navigation}) => {
           {/* Info Cards */}
           <View style={styles.infoCardsRow}>
             <View style={styles.infoCard}>
-              <Wallet size={16} color="#0F4C5C" style={{marginBottom: 4}} />
+              <Wallet size={16} color="#0F4C5C" style={styles.infoCardIcon} />
               <Text style={styles.infoCardLabel}>ESTIMATED COST</Text>
               <Text style={styles.infoCardValue}>
                 {activity.estimatedCost || 'Free entry'}
@@ -230,7 +234,7 @@ export const ActivityDetailScreen: React.FC<Props> = ({route, navigation}) => {
             </View>
 
             <View style={styles.infoCard}>
-              <Clock size={16} color="#0F4C5C" style={{marginBottom: 4}} />
+              <Clock size={16} color="#0F4C5C" style={styles.infoCardIcon} />
               <Text style={styles.infoCardLabel}>SCHEDULED TIME</Text>
               <Text style={styles.infoCardValue}>{activity.time}</Text>
             </View>
@@ -261,7 +265,11 @@ export const ActivityDetailScreen: React.FC<Props> = ({route, navigation}) => {
               style={styles.primaryDirectionsBtn}
               activeOpacity={0.8}
               onPress={handleOpenDirections}>
-              <Navigation size={18} color="#FFFFFF" style={{marginRight: 8}} />
+              <Navigation
+                size={18}
+                color="#FFFFFF"
+                style={styles.directionsIcon}
+              />
               <Text style={styles.primaryDirectionsText}>Get Directions</Text>
             </TouchableOpacity>
 
@@ -269,7 +277,7 @@ export const ActivityDetailScreen: React.FC<Props> = ({route, navigation}) => {
               style={styles.secondaryShareBtn}
               activeOpacity={0.8}
               onPress={handleShareActivity}>
-              <Share2 size={16} color="#0F4C5C" style={{marginRight: 6}} />
+              <Share2 size={16} color="#0F4C5C" style={styles.shareStopIcon} />
               <Text style={styles.secondaryShareText}>Share Stop</Text>
             </TouchableOpacity>
           </View>
@@ -502,5 +510,17 @@ const styles = StyleSheet.create({
     color: '#0F4C5C',
     fontSize: fp(1.45),
     fontWeight: '700',
+  },
+  tagSavedIcon: {
+    marginRight: 4,
+  },
+  infoCardIcon: {
+    marginBottom: 4,
+  },
+  directionsIcon: {
+    marginRight: 8,
+  },
+  shareStopIcon: {
+    marginRight: 6,
   },
 });
