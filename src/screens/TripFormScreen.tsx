@@ -39,18 +39,7 @@ import {
   Gem,
 } from 'lucide-react-native';
 import {fp} from '../utils/responsive';
-
-// Debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-  return debouncedValue;
-}
+import {useDebounce} from '../utils/useDebounce';
 
 const INTERESTS = [
   {id: 'Food', label: 'Food & Dining', icon: Utensils},
@@ -77,6 +66,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
   const debouncedSearch = useDebounce(searchInput, 400);
 
   useEffect(() => {
+    let isCurrent = true;
     const getSuggestions = async () => {
       if (debouncedSearch.length < 2) {
         setSuggestions([]);
@@ -84,10 +74,15 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
       }
       setIsSearching(true);
       const results = await fetchCitySuggestions(debouncedSearch);
-      setSuggestions(results);
-      setIsSearching(false);
+      if (isCurrent) {
+        setSuggestions(results);
+        setIsSearching(false);
+      }
     };
     getSuggestions();
+    return () => {
+      isCurrent = false;
+    };
   }, [debouncedSearch]);
 
   const handleSelectSuggestion = (placeDesc: string) => {
@@ -139,7 +134,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
               blurAmount={20}
               reducedTransparencyFallbackColor="white">
               {/* DESTINATION */}
-              <View style={[styles.section, {zIndex: 10}]}>
+              <View style={[styles.section, styles.sectionWithZIndex]}>
                 <Text style={styles.label}>Destination</Text>
 
                 {destination ? (
@@ -150,6 +145,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                     </Text>
                     <TouchableOpacity
                       style={styles.clearBtn}
+                      testID="clear-destination-btn"
                       onPress={() => dispatch(setReduxDestination(''))}>
                       <X color="#9CA3AF" size={18} />
                     </TouchableOpacity>
@@ -159,6 +155,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                     <View style={styles.inputContainer}>
                       <MapPin color="#6B7280" size={20} />
                       <TextInput
+                        testID="destination-input"
                         style={styles.input}
                         placeholder="Search for a city..."
                         placeholderTextColor="#9CA3AF"
@@ -182,6 +179,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                         {suggestions.map((s, idx) => (
                           <TouchableOpacity
                             key={s.placeId}
+                            testID={`search-suggestion-${idx}`}
                             style={[
                               styles.dropdownItem,
                               idx < suggestions.length - 1 &&
@@ -269,6 +267,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                       <TouchableOpacity
                         key={b}
                         activeOpacity={0.7}
+                        testID={`budget-card-${b}`}
                         style={[
                           styles.budgetCard,
                           isSelected && styles.budgetCardActive,
@@ -277,7 +276,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                         <Icon
                           color={isSelected ? '#0F4C5C' : '#9CA3AF'}
                           size={24}
-                          style={{marginBottom: 8}}
+                          style={styles.budgetIcon}
                         />
                         <Text
                           style={[
@@ -315,6 +314,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                       <TouchableOpacity
                         key={interest.id}
                         activeOpacity={0.8}
+                        testID={`interest-chip-${interest.id}`}
                         style={[styles.chip, isSelected && styles.chipActive]}
                         onPress={() =>
                           dispatch(toggleReduxInterest(interest.id))
@@ -322,7 +322,7 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                         <Icon
                           color={isSelected ? '#FFFFFF' : '#4B5563'}
                           size={14}
-                          style={{marginRight: 6}}
+                          style={styles.chipIcon}
                         />
                         <Text
                           style={[
@@ -345,18 +345,19 @@ export const TripFormScreen: React.FC<any> = ({navigation}) => {
                 styles.submitButton,
                 !isFormValid && styles.submitButtonDisabled,
               ]}
+              testID="submit-button"
               onPress={handleSubmit}
               disabled={!isFormValid}
               activeOpacity={0.9}>
               <Sparkles
                 color={isFormValid ? '#FFFFFF' : '#9CA3AF'}
                 size={20}
-                style={{marginRight: 8}}
+                style={styles.submitIcon}
               />
               <Text
                 style={[
                   styles.submitButtonText,
-                  !isFormValid && {color: '#9CA3AF'},
+                  !isFormValid && styles.submitButtonTextDisabled,
                 ]}>
                 Generate Itinerary
               </Text>
@@ -651,5 +652,20 @@ const styles = StyleSheet.create({
     fontSize: fp(1.8),
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  submitButtonTextDisabled: {
+    color: '#9CA3AF',
+  },
+  sectionWithZIndex: {
+    zIndex: 10,
+  },
+  budgetIcon: {
+    marginBottom: 8,
+  },
+  chipIcon: {
+    marginRight: 6,
+  },
+  submitIcon: {
+    marginRight: 8,
   },
 });
