@@ -4,7 +4,7 @@ import {
   SchemaType,
   Tool,
 } from '@google/generative-ai';
-import {GEMINI_API_KEY} from '@env';
+import {apiClient} from './apiClient';
 import {
   TripRequest,
   Itinerary,
@@ -403,16 +403,23 @@ interface ExecuteOptions {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const getGenAI = (): GoogleGenerativeAI => {
+  const activeKey = apiClient.getEffectiveGeminiKey();
+  if (!activeKey) {
+    throw new Error('GEMINI_API_KEY is missing from .env file');
+  }
+  if (!genAI || (genAI as any)._keyUsed !== activeKey) {
+    genAI = new GoogleGenerativeAI(activeKey);
+    (genAI as any)._keyUsed = activeKey;
+  }
+  return genAI;
+};
+
 const executeWithFallback = async (
   prompt: string,
   options?: ExecuteOptions | Schema,
 ): Promise<string> => {
-  if (!genAI) {
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is missing from .env file');
-    }
-    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  }
+  const ai = getGenAI();
 
   // Handle backwards compatibility where options was just schema
   const resolvedOptions: ExecuteOptions =
@@ -445,7 +452,7 @@ const executeWithFallback = async (
 
         modelParams.generationConfig = generationConfig;
 
-        const model = genAI.getGenerativeModel(modelParams);
+        const model = ai.getGenerativeModel(modelParams);
         const result = await model.generateContent(prompt);
         const response = await result.response;
         return response.text();
@@ -487,6 +494,18 @@ const executeWithFallback = async (
 export const generateItinerary = async (
   request: TripRequest,
 ): Promise<Itinerary> => {
+  // If BFF mode is selected, route through serverless edge proxy
+  if (apiClient.getOperatingMode() === 'bff') {
+    try {
+      return await apiClient.generateItineraryViaBff(request);
+    } catch (bffError) {
+      console.warn(
+        '[BFF] Proxy failed, falling back to direct client generation:',
+        bffError,
+      );
+    }
+  }
+
   try {
     const prompt = `
       Create a detailed ${request.days}-day itinerary for a trip to ${
@@ -724,12 +743,7 @@ export interface CopilotChatResult {
 export const chatWithTravelCopilot = async (
   params: CopilotChatParams,
 ): Promise<CopilotChatResult> => {
-  if (!genAI) {
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is missing from .env file');
-    }
-    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-  }
+  const ai = getGenAI();
 
   const systemInstruction = `
     You are ItinerAI Copilot, a sophisticated, enthusiastic, and deeply knowledgeable local travel guide, concierge, and autonomous action agent in ${
@@ -782,7 +796,7 @@ export const chatWithTravelCopilot = async (
   // 1. Attempt agentic turn with function calling across candidate models
   for (const modelName of CANDIDATE_MODELS) {
     try {
-      const model = genAI.getGenerativeModel({
+      const model = ai.getGenerativeModel({
         model: modelName,
         tools: copilotTools,
         systemInstruction,

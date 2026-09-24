@@ -1,4 +1,5 @@
 import {OPENWEATHERMAP_API_KEY} from '@env';
+import {apiClient} from './apiClient';
 
 const API_KEY = OPENWEATHERMAP_API_KEY;
 
@@ -34,6 +35,21 @@ export const getWeather = async (
   coordinates?: {latitude: number; longitude: number},
 ): Promise<WeatherData | null> => {
   try {
+    // If BFF mode is enabled, proxy request securely through edge service
+    if (apiClient.getOperatingMode() === 'bff') {
+      try {
+        const cleanCity = sanitizeCityName(destination);
+        if (cleanCity) {
+          const bffWeather = await apiClient.fetchWeatherViaBff(cleanCity);
+          if (bffWeather) {
+            return bffWeather;
+          }
+        }
+      } catch (err) {
+        console.warn('[BFF] Weather proxy fallback to client direct:', err);
+      }
+    }
+
     if (!API_KEY) {
       console.warn('OPENWEATHERMAP_API_KEY is not defined in .env');
       return null;
