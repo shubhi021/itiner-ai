@@ -239,6 +239,8 @@ jest.mock(
     GEMINI_API_KEY: 'test-gemini-key',
     GOOGLE_MAPS_API_KEY: 'test-maps-key',
     OPENWEATHERMAP_API_KEY: 'test-openweather-key',
+    BFF_BASE_URL: 'http://localhost:8080',
+    APP_CLIENT_SECRET: 'itinerai-secure-mobile-token-2026',
   }),
   {virtual: true},
 );

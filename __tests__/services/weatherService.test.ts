@@ -4,10 +4,6 @@ import {
   getWeather,
 } from '../../src/services/weatherService';
 
-jest.mock('@env', () => ({
-  OPENWEATHERMAP_API_KEY: 'test-openweather-key',
-}));
-
 describe('weatherService', () => {
   describe('sanitizeCityName', () => {
     it('extracts primary city name from comma-separated location', () => {
