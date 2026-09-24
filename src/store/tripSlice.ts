@@ -13,6 +13,20 @@ const tripSlice = createSlice({
   name: 'trip',
   initialState,
   reducers: {
+    loadSampleTripForm: (
+      state,
+      action: PayloadAction<{
+        destination: string;
+        days: number;
+        budget: 'low' | 'mid' | 'high';
+        interests: string[];
+      }>,
+    ) => {
+      state.destination = action.payload.destination;
+      state.days = action.payload.days;
+      state.budget = action.payload.budget;
+      state.interests = action.payload.interests;
+    },
     setDestination: (state, action: PayloadAction<string>) => {
       state.destination = action.payload;
     },
@@ -82,6 +96,7 @@ const tripSlice = createSlice({
 });
 
 export const {
+  loadSampleTripForm,
   setDestination,
   setDays,
   setBudget,

@@ -13,7 +13,6 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import {RootState} from '../store';
@@ -46,9 +45,22 @@ import {
   Bookmark,
   Plus,
   CreditCard,
+  Shield,
+  Server,
+  Key,
+  Gauge,
+  Cpu,
+  CheckCircle2,
+  Lock,
+  Eye,
+  EyeOff,
 } from 'lucide-react-native';
-
-const USER_PROFILE_STORAGE_KEY = '@itinerai_user_profile';
+import {
+  storageService,
+  StorageBenchmarkResult,
+  AiOperatingMode,
+} from '../services/storageService';
+import {apiClient} from '../services/apiClient';
 
 interface UserProfileData {
   name: string;
@@ -152,15 +164,25 @@ export const ProfileScreen = () => {
   const [editHandle, setEditHandle] = useState(profile.handle);
   const [editHomeCity, setEditHomeCity] = useState(profile.homeCity);
 
-  // Load saved profile preferences from AsyncStorage
+  // Storage & Security Architecture state
+  const [aiMode, setAiModeState] = useState<AiOperatingMode>('client');
+  const [customKeyInput, setCustomKeyInput] = useState('');
+  const [bffUrlInput, setBffUrlInput] = useState('');
+  const [isKeyVisible, setIsKeyVisible] = useState(false);
+  const [benchmarkResult, setBenchmarkResult] =
+    useState<StorageBenchmarkResult | null>(null);
+  const [isBenchmarking, setIsBenchmarking] = useState(false);
+  const [bffStatus, setBffStatus] = useState<string | null>(null);
+  const [isTestingBff, setIsTestingBff] = useState(false);
+
+  // Load saved profile preferences and security config
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const stored = await AsyncStorage.getItem(USER_PROFILE_STORAGE_KEY);
+        const stored = await storageService.getUserProfile<UserProfileData>();
         if (stored) {
-          const parsed = JSON.parse(stored);
           setProfile(prev => {
-            const merged = {...prev, ...parsed};
+            const merged = {...prev, ...stored};
             setEditName(merged.name);
             setEditHandle(merged.handle);
             setEditHomeCity(merged.homeCity);
@@ -171,7 +193,11 @@ export const ProfileScreen = () => {
         console.warn('Failed to load profile preferences:', e);
       }
     };
+
     loadProfile();
+    setAiModeState(storageService.getAiMode());
+    setCustomKeyInput(storageService.getCustomApiKey() || '');
+    setBffUrlInput(storageService.getBffUrl() || '');
   }, []);
 
   // Save profile helper
@@ -179,10 +205,7 @@ export const ProfileScreen = () => {
     const newProfile = {...profile, ...updated};
     setProfile(newProfile);
     try {
-      await AsyncStorage.setItem(
-        USER_PROFILE_STORAGE_KEY,
-        JSON.stringify(newProfile),
-      );
+      await storageService.saveUserProfile(newProfile);
     } catch (e) {
       console.warn('Failed to save profile preferences:', e);
     }
@@ -264,20 +287,10 @@ export const ProfileScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const keys = await AsyncStorage.getAllKeys();
-              const tempKeys = keys.filter(
-                k =>
-                  k.startsWith('@itinerai_weather_cache_') ||
-                  k.startsWith('@itinerai_chat_'),
-              );
-              if (tempKeys.length > 0) {
-                await Promise.all(
-                  tempKeys.map(k => AsyncStorage.removeItem(k)),
-                );
-              }
+              await storageService.clearTemporaryCaches();
               Alert.alert(
                 'Cache Cleared',
-                'Temporary weather and copilot memory caches were reset.',
+                'Temporary weather and copilot memory caches were reset via MMKV.',
               );
             } catch (err) {
               Alert.alert('Error', 'Failed to clear cache.');
@@ -286,6 +299,64 @@ export const ProfileScreen = () => {
         },
       ],
     );
+  };
+
+  const handleRunStorageBenchmark = async () => {
+    setIsBenchmarking(true);
+    try {
+      // Benchmark 50 read/write operations comparing JSI MMKV vs Async Bridge
+      const results = await storageService.benchmarkStorage(50);
+      setBenchmarkResult(results);
+    } catch (err) {
+      Alert.alert('Benchmark Error', 'Could not complete storage benchmark.');
+    } finally {
+      setIsBenchmarking(false);
+    }
+  };
+
+  const handleSelectAiMode = (mode: AiOperatingMode) => {
+    storageService.setAiMode(mode);
+    setAiModeState(mode);
+  };
+
+  const handleSaveCustomKey = () => {
+    if (customKeyInput.trim()) {
+      storageService.setCustomApiKey(customKeyInput.trim());
+      Alert.alert(
+        'Gemini Key Saved',
+        'Your custom Gemini API key is now securely stored in local encrypted MMKV.',
+      );
+    } else {
+      storageService.clearCustomApiKey();
+      Alert.alert('Key Cleared', 'Reverted to default development API key.');
+    }
+  };
+
+  const handleSaveBffUrl = () => {
+    if (bffUrlInput.trim()) {
+      storageService.setBffUrl(bffUrlInput.trim());
+      Alert.alert(
+        'BFF Endpoint Saved',
+        'Updated Backend-For-Frontend proxy URL.',
+      );
+    }
+  };
+
+  const handleTestBffHealth = async () => {
+    setIsTestingBff(true);
+    setBffStatus('Testing connection...');
+    try {
+      const status = await apiClient.checkBffHealth();
+      if (status.healthy) {
+        setBffStatus(`Connected (Service: ${status.service || 'BFF Edge'})`);
+      } else {
+        setBffStatus('Endpoint unreachable or returned error');
+      }
+    } catch (err: any) {
+      setBffStatus('Connection failed');
+    } finally {
+      setIsTestingBff(false);
+    }
   };
 
   const handleExportAllTrips = async () => {
@@ -612,11 +683,263 @@ export const ProfileScreen = () => {
                 Clear Cache
               </Text>
               <Text style={styles.settingDescription}>
-                Reset cached weather and temporary logs
+                Reset cached weather and temporary logs via MMKV
               </Text>
             </View>
             <ChevronRight size={16} color="#94A3B8" />
           </TouchableOpacity>
+        </View>
+
+        {/* High-Performance Storage (MMKV JSI) */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Cpu size={15} color="#0F4C5C" />
+            <Text style={styles.sectionTitle}>
+              HIGH-PERFORMANCE STORAGE (MMKV)
+            </Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>
+            JSI synchronous C++ storage engine (~30x faster than AsyncStorage
+            bridge serialization).
+          </Text>
+
+          <View style={styles.archBadgeRow}>
+            <View style={styles.archPill}>
+              <Zap size={12} color="#0F4C5C" />
+              <Text style={styles.archPillText}>C++ JSI Direct Access</Text>
+            </View>
+            <View style={[styles.archPill, styles.archPillGreen]}>
+              <CheckCircle2 size={12} color="#166534" />
+              <Text style={styles.archPillTextGreen}>
+                Auto-Migration Complete
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.benchmarkBtn, isBenchmarking && styles.btnDisabled]}
+            activeOpacity={0.7}
+            disabled={isBenchmarking}
+            onPress={handleRunStorageBenchmark}>
+            <Gauge size={16} color="#FFFFFF" />
+            <Text style={styles.benchmarkBtnText}>
+              {isBenchmarking
+                ? 'Running Micro-Benchmark (50 IOPS)...'
+                : 'Run Storage Benchmark (MMKV vs AsyncStorage)'}
+            </Text>
+          </TouchableOpacity>
+
+          {benchmarkResult && (
+            <View style={styles.benchmarkResultBox}>
+              <Text style={styles.benchmarkHeader}>
+                BENCHMARK RESULTS ({benchmarkResult.iterations} ITERATIONS):
+              </Text>
+              <View style={styles.benchGrid}>
+                <View style={styles.benchCol}>
+                  <Text style={styles.benchMetricTitle}>Write Latency</Text>
+                  <Text style={styles.benchValueGreen}>
+                    {benchmarkResult.mmkvWriteMs}ms (MMKV)
+                  </Text>
+                  <Text style={styles.benchValueMuted}>
+                    {benchmarkResult.asyncStorageWriteMs}ms (AsyncStorage)
+                  </Text>
+                  <Text style={styles.benchSpeedupBadge}>
+                    {benchmarkResult.writeSpeedup}x Faster
+                  </Text>
+                </View>
+                <View style={styles.benchCol}>
+                  <Text style={styles.benchMetricTitle}>Read Latency</Text>
+                  <Text style={styles.benchValueGreen}>
+                    {benchmarkResult.mmkvReadMs}ms (MMKV)
+                  </Text>
+                  <Text style={styles.benchValueMuted}>
+                    {benchmarkResult.asyncStorageReadMs}ms (AsyncStorage)
+                  </Text>
+                  <Text style={styles.benchSpeedupBadge}>
+                    {benchmarkResult.readSpeedup}x Faster
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Security Architecture & API Configuration */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Shield size={15} color="#0F4C5C" />
+            <Text style={styles.sectionTitle}>
+              SECURITY ARCHITECTURE & BFF PROXY
+            </Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>
+            BFF proxies protect private keys from APK de-compilation with rate
+            limiting and edge caching.
+          </Text>
+
+          {/* Operating Mode Selector */}
+          <View style={styles.aiModePillContainer}>
+            <TouchableOpacity
+              style={[
+                styles.aiModePill,
+                aiMode === 'bff' && styles.aiModePillActive,
+              ]}
+              onPress={() => handleSelectAiMode('bff')}>
+              <Server
+                size={13}
+                color={aiMode === 'bff' ? '#FFFFFF' : '#475569'}
+              />
+              <Text
+                style={[
+                  styles.aiModePillText,
+                  aiMode === 'bff' && styles.aiModePillTextActive,
+                ]}>
+                BFF Proxy (Prod)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.aiModePill,
+                aiMode === 'client' && styles.aiModePillActive,
+              ]}
+              onPress={() => handleSelectAiMode('client')}>
+              <Key
+                size={13}
+                color={aiMode === 'client' ? '#FFFFFF' : '#475569'}
+              />
+              <Text
+                style={[
+                  styles.aiModePillText,
+                  aiMode === 'client' && styles.aiModePillTextActive,
+                ]}>
+                Direct / BYOK
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.aiModePill,
+                aiMode === 'demo' && styles.aiModePillActive,
+              ]}
+              onPress={() => handleSelectAiMode('demo')}>
+              <Zap
+                size={13}
+                color={aiMode === 'demo' ? '#FFFFFF' : '#475569'}
+              />
+              <Text
+                style={[
+                  styles.aiModePillText,
+                  aiMode === 'demo' && styles.aiModePillTextActive,
+                ]}>
+                Offline Demo
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* BFF Proxy Settings */}
+          {aiMode === 'bff' && (
+            <View style={styles.securitySubcard}>
+              <View style={styles.securityNoteRow}>
+                <Lock size={14} color="#0F4C5C" />
+                <Text style={styles.securityNoteText}>
+                  Secrets encapsulated on edge server. App sends requests via
+                  X-App-Client-Token.
+                </Text>
+              </View>
+              <Text style={styles.inputFieldLabel}>BFF Proxy Endpoint URL</Text>
+              <TextInput
+                style={styles.securityTextInput}
+                placeholder="http://localhost:8080 or https://bff.itinerai.workers.dev"
+                placeholderTextColor="#94A3B8"
+                value={bffUrlInput}
+                onChangeText={setBffUrlInput}
+                autoCapitalize="none"
+              />
+              <View style={styles.securityBtnRow}>
+                <TouchableOpacity
+                  style={styles.saveSecBtn}
+                  onPress={handleSaveBffUrl}>
+                  <Text style={styles.saveSecBtnText}>Save URL</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.testSecBtn}
+                  disabled={isTestingBff}
+                  onPress={handleTestBffHealth}>
+                  <Text style={styles.testSecBtnText}>
+                    {isTestingBff ? 'Testing...' : 'Test Health'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {bffStatus && (
+                <Text style={styles.bffStatusText}>Status: {bffStatus}</Text>
+              )}
+            </View>
+          )}
+
+          {/* BYOK Settings */}
+          {aiMode === 'client' && (
+            <View style={styles.securitySubcard}>
+              <View style={styles.securityNoteRow}>
+                <Key size={14} color="#D97706" />
+                <Text style={styles.securityNoteText}>
+                  Bring Your Own Key (BYOK): Overrides bundled keys and stores
+                  securely in MMKV.
+                </Text>
+              </View>
+              <Text style={styles.inputFieldLabel}>Gemini API Key</Text>
+              <View style={styles.maskedInputRow}>
+                <TextInput
+                  style={[
+                    styles.securityTextInput,
+                    styles.securityTextInputFlex,
+                  ]}
+                  placeholder="AIzaSy..."
+                  placeholderTextColor="#94A3B8"
+                  value={customKeyInput}
+                  onChangeText={setCustomKeyInput}
+                  secureTextEntry={!isKeyVisible}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeIconBtn}
+                  onPress={() => setIsKeyVisible(!isKeyVisible)}>
+                  {isKeyVisible ? (
+                    <EyeOff size={16} color="#64748B" />
+                  ) : (
+                    <Eye size={16} color="#64748B" />
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View style={styles.securityBtnRow}>
+                <TouchableOpacity
+                  style={styles.saveSecBtn}
+                  onPress={handleSaveCustomKey}>
+                  <Text style={styles.saveSecBtnText}>Save Key</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.clearSecBtn}
+                  onPress={() => {
+                    setCustomKeyInput('');
+                    storageService.clearCustomApiKey();
+                    Alert.alert('Key Reset', 'Custom API key removed.');
+                  }}>
+                  <Text style={styles.clearSecBtnText}>Reset to Default</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Demo Mode */}
+          {aiMode === 'demo' && (
+            <View style={styles.securitySubcard}>
+              <Text style={styles.securityNoteText}>
+                Zero-Config Mode: Uses sample Kyoto and Paris itineraries
+                without triggering any network or API quota. Perfect for rapid
+                recruiter demos!
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Version Footnote */}
@@ -1183,5 +1506,225 @@ const styles = StyleSheet.create({
   currencyRowTextSelected: {
     color: '#2563EB',
     fontWeight: '700',
+  },
+  archBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginVertical: 10,
+  },
+  archPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#E0F2FE',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  archPillGreen: {
+    backgroundColor: '#DCFCE7',
+  },
+  archPillText: {
+    fontSize: fp(1.2),
+    fontWeight: '600',
+    color: '#0369A1',
+  },
+  archPillTextGreen: {
+    fontSize: fp(1.2),
+    fontWeight: '600',
+    color: '#15803D',
+  },
+  benchmarkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#0F4C5C',
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  btnDisabled: {
+    opacity: 0.6,
+  },
+  benchmarkBtnText: {
+    color: '#FFFFFF',
+    fontSize: fp(1.3),
+    fontWeight: '700',
+  },
+  benchmarkResultBox: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#0A2F35',
+  },
+  benchmarkHeader: {
+    fontSize: fp(1.15),
+    fontWeight: '700',
+    color: '#99F6E4',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  benchGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  benchCol: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    padding: 8,
+    borderRadius: 8,
+  },
+  benchMetricTitle: {
+    fontSize: fp(1.15),
+    color: '#CBD5E1',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  benchValueGreen: {
+    fontSize: fp(1.35),
+    color: '#34D399',
+    fontWeight: '700',
+  },
+  benchValueMuted: {
+    fontSize: fp(1.15),
+    color: '#94A3B8',
+    marginBottom: 4,
+  },
+  benchSpeedupBadge: {
+    fontSize: fp(1.1),
+    fontWeight: '800',
+    color: '#FEF08A',
+    backgroundColor: 'rgba(250, 204, 21, 0.2)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  aiModePillContainer: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 10,
+    marginBottom: 12,
+  },
+  aiModePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  aiModePillActive: {
+    backgroundColor: '#0F4C5C',
+    borderColor: '#0F4C5C',
+  },
+  aiModePillText: {
+    fontSize: fp(1.15),
+    fontWeight: '600',
+    color: '#475569',
+  },
+  aiModePillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  securitySubcard: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 4,
+  },
+  securityNoteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  securityNoteText: {
+    flex: 1,
+    fontSize: fp(1.2),
+    color: '#475569',
+    lineHeight: 16,
+  },
+  inputFieldLabel: {
+    fontSize: fp(1.2),
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 4,
+  },
+  securityTextInput: {
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: fp(1.25),
+    color: '#1E293B',
+    marginBottom: 8,
+  },
+  securityTextInputFlex: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  maskedInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  eyeIconBtn: {
+    padding: 8,
+  },
+  securityBtnRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  saveSecBtn: {
+    backgroundColor: '#0F4C5C',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  saveSecBtnText: {
+    color: '#FFFFFF',
+    fontSize: fp(1.2),
+    fontWeight: '700',
+  },
+  testSecBtn: {
+    backgroundColor: '#E0F2FE',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  testSecBtnText: {
+    color: '#0369A1',
+    fontSize: fp(1.2),
+    fontWeight: '600',
+  },
+  clearSecBtn: {
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  clearSecBtnText: {
+    color: '#64748B',
+    fontSize: fp(1.2),
+    fontWeight: '600',
+  },
+  bffStatusText: {
+    marginTop: 8,
+    fontSize: fp(1.15),
+    fontWeight: '600',
+    color: '#0F4C5C',
   },
 });

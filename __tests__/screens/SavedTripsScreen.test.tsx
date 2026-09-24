@@ -7,7 +7,7 @@ import tripReducer from '../../src/store/tripSlice';
 import itineraryReducer from '../../src/store/itinerarySlice';
 import savedTripsReducer from '../../src/store/savedTripsSlice';
 import {SavedTripsScreen} from '../../src/screens/SavedTripsScreen';
-import {SavedTrip} from '../../src/services/storageService';
+import {SavedTrip, storageService} from '../../src/services/storageService';
 
 const mockTrips: SavedTrip[] = [
   {
@@ -85,6 +85,7 @@ describe('SavedTripsScreen', () => {
       goBack: jest.fn(),
     };
     jest.spyOn(Alert, 'alert');
+    jest.spyOn(storageService, 'getSavedTrips').mockResolvedValue(mockTrips);
   });
 
   afterEach(() => {
@@ -103,6 +104,7 @@ describe('SavedTripsScreen', () => {
   };
 
   it('renders empty state when there are no saved trips', async () => {
+    jest.spyOn(storageService, 'getSavedTrips').mockResolvedValue([]);
     const store = createMockStore({
       savedTrips: {
         trips: [],
@@ -121,7 +123,7 @@ describe('SavedTripsScreen', () => {
     });
   });
 
-  it('renders trip cards with title, status, and duration', () => {
+  it('renders trip cards with title, status, and duration', async () => {
     const store = createMockStore({
       savedTrips: {
         trips: mockTrips,
@@ -133,13 +135,15 @@ describe('SavedTripsScreen', () => {
 
     const {getByText, getByTestId} = renderComponent(store);
 
-    expect(getByText('Tokyo Journey')).toBeTruthy();
-    expect(getByText('Parisian Getaway')).toBeTruthy();
-    expect(getByTestId('saved-trip-card-trip-1')).toBeTruthy();
-    expect(getByTestId('saved-trip-card-trip-2')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText('Tokyo Journey')).toBeTruthy();
+      expect(getByText('Parisian Getaway')).toBeTruthy();
+      expect(getByTestId('saved-trip-card-trip-1')).toBeTruthy();
+      expect(getByTestId('saved-trip-card-trip-2')).toBeTruthy();
+    });
   });
 
-  it('filters trips when tapping Upcoming and Past filter chips', () => {
+  it('filters trips when tapping Upcoming and Past filter chips', async () => {
     const store = createMockStore({
       savedTrips: {
         trips: mockTrips,
@@ -150,6 +154,10 @@ describe('SavedTripsScreen', () => {
     });
 
     const {getByText, queryByText} = renderComponent(store);
+
+    await waitFor(() => {
+      expect(getByText('Tokyo Journey')).toBeTruthy();
+    });
 
     // Tap Upcoming
     fireEvent.press(getByText('Upcoming'));
@@ -167,7 +175,7 @@ describe('SavedTripsScreen', () => {
     expect(getByText('Parisian Getaway')).toBeTruthy();
   });
 
-  it('filters trips by search input query', () => {
+  it('filters trips by search input query', async () => {
     const store = createMockStore({
       savedTrips: {
         trips: mockTrips,
@@ -179,6 +187,10 @@ describe('SavedTripsScreen', () => {
 
     const {getByPlaceholderText, getByText, queryByText, getByTestId} =
       renderComponent(store);
+
+    await waitFor(() => {
+      expect(getByText('Tokyo Journey')).toBeTruthy();
+    });
 
     // Open search bar by tapping search icon button
     const searchIcons = getByTestId('icon-Search');
@@ -193,7 +205,7 @@ describe('SavedTripsScreen', () => {
     expect(queryByText('Parisian Getaway')).toBeNull();
   });
 
-  it('navigates to ItineraryDetail with trip data when card is selected', () => {
+  it('navigates to ItineraryDetail with trip data when card is selected', async () => {
     const store = createMockStore({
       savedTrips: {
         trips: mockTrips,
@@ -203,7 +215,11 @@ describe('SavedTripsScreen', () => {
       },
     });
 
-    const {getByTestId} = renderComponent(store);
+    const {getByTestId, getByText} = renderComponent(store);
+
+    await waitFor(() => {
+      expect(getByText('Tokyo Journey')).toBeTruthy();
+    });
 
     const card = getByTestId('saved-trip-card-trip-1');
     fireEvent.press(card);
@@ -217,7 +233,7 @@ describe('SavedTripsScreen', () => {
     );
   });
 
-  it('opens action menu Alert when tapping more options button', () => {
+  it('opens action menu Alert when tapping more options button', async () => {
     const store = createMockStore({
       savedTrips: {
         trips: mockTrips,
@@ -227,7 +243,11 @@ describe('SavedTripsScreen', () => {
       },
     });
 
-    const {getByTestId} = renderComponent(store);
+    const {getByTestId, getByText} = renderComponent(store);
+
+    await waitFor(() => {
+      expect(getByText('Tokyo Journey')).toBeTruthy();
+    });
 
     const moreBtn = getByTestId('more-btn-trip-1');
     fireEvent.press(moreBtn);
