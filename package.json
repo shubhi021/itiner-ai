@@ -9,7 +9,10 @@
     "start": "react-native start",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bundle:android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output ./dist/bundle.android.js --sourcemap-output ./dist/bundle.android.map",
+    "bundle:ios": "react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ./dist/bundle.ios.js --sourcemap-output ./dist/bundle.ios.map",
+    "start:bff": "node server/bffProxy.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -25,6 +28,7 @@
     "react-native-dotenv": "^4.1.1",
     "react-native-gesture-handler": "^2.14.0",
     "react-native-maps": "^1.14.0",
+    "react-native-mmkv": "^2.12.2",
     "react-native-reanimated": "^3.6.3",
     "react-native-responsive-dimensions": "^3.1.1",
     "react-native-safe-area-context": "^5.9.1",

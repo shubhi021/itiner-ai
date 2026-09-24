@@ -3,9 +3,50 @@ import 'react-native-gesture-handler/jestSetup';
 
 // In-memory AsyncStorage mock (prefixed with 'mock' for Jest scope rule)
 const mockStorageMap = new Map();
+const mockMmkvInstances = new Map();
+
+class MockMMKV {
+  constructor(config = {}) {
+    this.id = config.id || 'default';
+    if (!mockMmkvInstances.has(this.id)) {
+      mockMmkvInstances.set(this.id, new Map());
+    }
+    this.map = mockMmkvInstances.get(this.id);
+  }
+  set(key, value) {
+    this.map.set(key, typeof value === 'string' ? value : String(value));
+  }
+  getString(key) {
+    const val = this.map.get(key);
+    return typeof val === 'string' ? val : undefined;
+  }
+  getNumber(key) {
+    const val = this.map.get(key);
+    return val !== undefined ? Number(val) : undefined;
+  }
+  getBoolean(key) {
+    const val = this.map.get(key);
+    return val !== undefined ? val === 'true' || val === true : undefined;
+  }
+  delete(key) {
+    this.map.delete(key);
+  }
+  contains(key) {
+    return this.map.has(key);
+  }
+  getAllKeys() {
+    return Array.from(this.map.keys());
+  }
+  clearAll() {
+    this.map.clear();
+  }
+  recrypt() {}
+}
+
 const mockAsyncStorage = {
   setItem: jest.fn((key, value) => {
     mockStorageMap.set(key, String(value));
+    mockMmkvInstances.forEach(m => m.set(key, String(value)));
     return Promise.resolve(null);
   }),
   getItem: jest.fn(key => {
@@ -15,10 +56,12 @@ const mockAsyncStorage = {
   }),
   removeItem: jest.fn(key => {
     mockStorageMap.delete(key);
+    mockMmkvInstances.forEach(m => m.delete(key));
     return Promise.resolve(null);
   }),
   clear: jest.fn(() => {
     mockStorageMap.clear();
+    mockMmkvInstances.forEach(m => m.clear());
     return Promise.resolve(null);
   }),
   getAllKeys: jest.fn(() => {
@@ -30,16 +73,29 @@ const mockAsyncStorage = {
     );
   }),
   multiSet: jest.fn(keyValuePairs => {
-    keyValuePairs.forEach(([k, v]) => mockStorageMap.set(k, String(v)));
+    keyValuePairs.forEach(([k, v]) => {
+      mockStorageMap.set(k, String(v));
+      mockMmkvInstances.forEach(m => m.set(k, String(v)));
+    });
     return Promise.resolve(null);
   }),
   multiRemove: jest.fn(keys => {
-    keys.forEach(k => mockStorageMap.delete(k));
+    keys.forEach(k => {
+      mockStorageMap.delete(k);
+      mockMmkvInstances.forEach(m => m.delete(k));
+    });
     return Promise.resolve(null);
   }),
 };
 
+global.__clearMockMMKV = () => {
+  mockMmkvInstances.forEach(m => m.clear());
+};
+
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
+jest.mock('react-native-mmkv', () => ({
+  MMKV: MockMMKV,
+}));
 
 // Mock Reanimated
 jest.mock('react-native-reanimated', () => {

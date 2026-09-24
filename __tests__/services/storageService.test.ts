@@ -207,4 +207,93 @@ describe('storageService', () => {
       expect(retrieved).toEqual(mockBudget);
     });
   });
+
+  describe('MMKV Synchronous Performance & JSI Access', () => {
+    it('synchronously reads saved trips without promise overhead', async () => {
+      await storageService.saveTrip(mockTrip);
+      const syncTrips = storageService.getSavedTripsSync();
+      expect(syncTrips).toHaveLength(1);
+      expect(syncTrips[0].id).toBe('trip_123');
+    });
+
+    it('synchronously checks if trip is saved', async () => {
+      await storageService.saveTrip(mockTrip);
+      expect(storageService.isTripSavedSync('Tokyo, Japan')).toBe(true);
+      expect(storageService.isTripSavedSync('Rome, Italy')).toBe(false);
+    });
+
+    it('synchronously retrieves active itinerary', async () => {
+      await storageService.cacheActiveItinerary({
+        itinerary: mockItinerary,
+        budget: 'mid',
+      });
+      const syncActive = storageService.getCachedActiveItinerarySync();
+      expect(syncActive?.itinerary.destination).toBe('Tokyo, Japan');
+    });
+  });
+
+  describe('Security & BYOK Architecture Storage', () => {
+    it('stores and retrieves custom user Gemini API Key', () => {
+      expect(storageService.getCustomApiKey()).toBeNull();
+      storageService.setCustomApiKey('custom-gemini-ai-key-12345');
+      expect(storageService.getCustomApiKey()).toBe(
+        'custom-gemini-ai-key-12345',
+      );
+      storageService.clearCustomApiKey();
+      expect(storageService.getCustomApiKey()).toBeNull();
+    });
+
+    it('stores and retrieves BFF URL and AI Operating Mode', () => {
+      expect(storageService.getAiMode()).toBe('client');
+      storageService.setBffUrl('https://itinerai-bff.example.workers.dev');
+      expect(storageService.getBffUrl()).toBe(
+        'https://itinerai-bff.example.workers.dev',
+      );
+      storageService.setAiMode('bff');
+      expect(storageService.getAiMode()).toBe('bff');
+      storageService.setAiMode('demo');
+      expect(storageService.getAiMode()).toBe('demo');
+    });
+  });
+
+  describe('Storage Benchmark & Cache Management', () => {
+    it('executes storage benchmark comparison between MMKV and AsyncStorage', async () => {
+      const result = await storageService.benchmarkStorage(5);
+      expect(result.iterations).toBe(5);
+      expect(result.mmkvWriteMs).toBeGreaterThanOrEqual(1);
+      expect(result.asyncStorageWriteMs).toBeGreaterThanOrEqual(1);
+    });
+
+    it('clears temporary weather and chat caches while keeping saved trips', async () => {
+      await storageService.saveTrip(mockTrip);
+      await storageService.cacheWeather('Tokyo', {
+        cityName: 'Tokyo',
+        temp: 20,
+        condition: 'Clear',
+        description: 'sunny',
+        icon: '01d',
+        humidity: 50,
+        windSpeed: 2.0,
+      });
+      await storageService.saveCachedChat('Tokyo', [
+        {
+          id: 'c1',
+          role: 'user',
+          text: 'Where to eat ramen?',
+          timestamp: 12345,
+        },
+      ]);
+
+      await storageService.clearTemporaryCaches();
+
+      const remainingTrips = await storageService.getSavedTrips();
+      expect(remainingTrips).toHaveLength(1);
+
+      const clearedWeather = await storageService.getCachedWeather('Tokyo');
+      expect(clearedWeather).toBeNull();
+
+      const clearedChat = await storageService.getCachedChat('Tokyo');
+      expect(clearedChat).toEqual([]);
+    });
+  });
 });
