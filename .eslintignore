@@ -4,3 +4,4 @@ ios/
 android/
 .bundle/
 coverage/
+server/
