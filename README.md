@@ -203,7 +203,7 @@ ItinerAI/
 
 **Shubhi Srivastava**
 - GitHub: [@shubhi021](https://github.com/shubhi021)
-- LinkedIn: [Connect on LinkedIn](https://www.linkedin.com/in/shubhi-srivastava/)
+- LinkedIn: [Connect on LinkedIn](https://www.linkedin.com/in/shubhi-srivastava-980523257)
 
 ---
 
