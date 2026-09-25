@@ -1129,7 +1129,10 @@ export const validateGeminiKey = async (
     const response = await result.response;
     const text = response.text();
     if (text) {
-      return {valid: true, message: 'Key is valid and connected to Gemini 1.5 Flash!'};
+      return {
+        valid: true,
+        message: 'Key is valid and connected to Gemini 1.5 Flash!',
+      };
     }
     return {valid: false, message: 'Received empty response from Gemini.'};
   } catch (err: any) {
