@@ -21,12 +21,9 @@ let genAI: GoogleGenerativeAI | null = null;
 
 // Candidate models in fallback order to handle version transitions, capacity spikes, and high demand
 const CANDIDATE_MODELS = [
-  'gemini-3.5-flash-lite',
   'gemini-flash-lite-latest',
   'gemini-flash-latest',
-  'gemini-3.6-flash',
-  'gemini-3.5-flash',
-  'gemini-pro-latest',
+  'gemini-3.5-flash-lite',
 ];
 
 // Define the JSON schema we want Gemini to return for full itineraries
@@ -405,8 +402,10 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const getGenAI = (): GoogleGenerativeAI => {
   const activeKey = apiClient.getEffectiveGeminiKey();
-  if (!activeKey) {
-    throw new Error('GEMINI_API_KEY is missing from .env file');
+  if (!activeKey || activeKey === 'your_gemini_api_key_here') {
+    throw new Error(
+      'Gemini API key is missing or not configured. Please add your key in the Profile tab (BYOK) or in your .env file.',
+    );
   }
   if (!genAI || (genAI as any)._keyUsed !== activeKey) {
     genAI = new GoogleGenerativeAI(activeKey);
@@ -465,6 +464,17 @@ const executeWithFallback = async (
             status || 'unknown'
           }, attempt: ${attempt + 1}): ${msg.slice(0, 100)}`,
         );
+
+        // If key is invalid (400 / API_KEY_INVALID), fail immediately with a clear error
+        if (
+          msg.includes('API key not valid') ||
+          msg.includes('API_KEY_INVALID') ||
+          msg.includes('API key expired')
+        ) {
+          throw new Error(
+            'Your Gemini API key is invalid or expired. Please check your key in the Profile tab.',
+          );
+        }
 
         // If high demand (503) or rate limit (429), pause briefly before trying next candidate
         if (
@@ -1095,5 +1105,47 @@ export const generateBudgetForecast = async (
   } catch (error) {
     console.error('Error generating budget forecast with Gemini:', error);
     throw new Error('Failed to load budget forecast. Please try again.');
+  }
+};
+
+/**
+ * Validates a Gemini API key against the real Gemini 1.5 Flash endpoint
+ */
+export const validateGeminiKey = async (
+  keyToTest?: string,
+): Promise<{valid: boolean; message: string}> => {
+  const key = keyToTest?.trim() || apiClient.getEffectiveGeminiKey();
+  if (!key || key === 'your_gemini_api_key_here') {
+    return {
+      valid: false,
+      message: 'No API key provided. Please paste your Gemini key.',
+    };
+  }
+
+  try {
+    const ai = new GoogleGenerativeAI(key);
+    const model = ai.getGenerativeModel({model: 'gemini-flash-latest'});
+    const result = await model.generateContent('Say hello');
+    const response = await result.response;
+    const text = response.text();
+    if (text) {
+      return {valid: true, message: 'Key is valid and connected to Gemini 1.5 Flash!'};
+    }
+    return {valid: false, message: 'Received empty response from Gemini.'};
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('API key not valid') || msg.includes('API_KEY_INVALID')) {
+      return {
+        valid: false,
+        message: 'Invalid API key. Please check your key on Google AI Studio.',
+      };
+    }
+    if (msg.includes('quota') || msg.includes('429')) {
+      return {
+        valid: false,
+        message: 'Quota exceeded or rate limited (429) on this key.',
+      };
+    }
+    return {valid: false, message: `Validation failed: ${msg.slice(0, 100)}`};
   }
 };

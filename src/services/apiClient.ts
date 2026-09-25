@@ -44,14 +44,19 @@ export const apiClient = {
     if (customKey && customKey.trim()) {
       return customKey.trim();
     }
-    return GEMINI_API_KEY || '';
+    const envKey = GEMINI_API_KEY || '';
+    if (envKey && envKey.trim() && envKey !== 'your_gemini_api_key_here') {
+      return envKey.trim();
+    }
+    return '';
   },
 
   /**
    * Checks whether the app has a valid Gemini key (either custom or env)
    */
   hasClientApiKey(): boolean {
-    return Boolean(this.getEffectiveGeminiKey());
+    const key = this.getEffectiveGeminiKey();
+    return Boolean(key && key !== 'your_gemini_api_key_here');
   },
 
   /**

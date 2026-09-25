@@ -1,219 +1,212 @@
-# ItinerAI
+# ItinerAI ✈️
 
-An AI-powered travel itinerary planner and smart assistant built with React Native and Google Gemini. Generates personalized, day-by-day travel schedules with real-time weather integration, interactive maps, and offline support.
+> A thoughtful, production-grade AI travel companion built with React Native and Google Gemini. It turns messy vacation planning into clean, day-by-day itineraries with live weather context, interactive maps, and an in-trip AI copilot.
 
 [![CI](https://github.com/shubhi021/itiner-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/shubhi021/itiner-ai/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-171%20passed%20(22%20suites)-brightgreen.svg)](https://github.com/shubhi021/itiner-ai)
+[![Tests](https://img.shields.io/badge/tests-171%20passing-brightgreen.svg)](https://github.com/shubhi021/itiner-ai)
 [![React Native](https://img.shields.io/badge/React%20Native-0.73.6-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0.4-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Storage](https://img.shields.io/badge/Storage-MMKV%20(JSI%2030x%20Faster)-orange.svg)](https://github.com/mrousavy/react-native-mmkv)
-[![Security](https://img.shields.io/badge/Security-BFF%20Proxy%20%2B%20BYOK-purple.svg)](#)
-[![Engine](https://img.shields.io/badge/Engine-Hermes%20Bytecode-yellow.svg)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Storage](https://img.shields.io/badge/Storage-MMKV%20(JSI)-orange.svg)](https://github.com/mrousavy/react-native-mmkv)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
 
-## Screenshots
+## 📱 App Showcase
 
-<!-- Add your app screenshots or demo recordings here -->
-| Trip Planning | Itinerary Timeline | AI Travel Copilot | Packing & Insights |
-| :---: | :---: | :---: | :---: |
-| *Add screenshot* | *Add screenshot* | *Add screenshot* | *Add screenshot* |
+| 1. Plan & Preferences | 2. Daily Route & Map | 3. Agentic AI Copilot | 4. Packing Intelligence | 5. Journey Overview |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/01-plan.png" width="175" alt="Trip Planning Screen" /> | <img src="docs/screenshots/02-itinerary.png" width="175" alt="Itinerary Timeline & Map" /> | <img src="docs/screenshots/03-copilot.png" width="175" alt="Agentic AI Copilot" /> | <img src="docs/screenshots/04-insights.png" width="175" alt="Packing and Insights" /> | <img src="docs/screenshots/05-summary.png" width="175" alt="Journey Overview & Roadmap" /> |
+| *Destination, budget tiers & travel styles* | *Geocoded stops, route polyline & live weather* | *Context-grounded chat with live tool execution* | *Interactive checklist synced with live weather* | *15 geocoded spots, budget & daily roadmap* |
 
----
-
-## Overview
-
-Planning a multi-day trip usually means juggling maps, weather apps, travel blogs, and notes across multiple windows. **ItinerAI** consolidates this workflow into a single mobile experience:
-
-- **Structured Day-by-Day Itineraries**: Generates complete daily schedules with activity times, categories, coordinates, and cost estimates.
-- **Weather-Aware Planning**: Fetches local forecasts via OpenWeatherMap to adapt recommendations (e.g., suggesting indoor alternatives on rainy days).
-- **In-App Travel Copilot**: A conversational assistant grounded in your active trip details (destination, dates, budget tier, and travel style).
-- **Prompt-to-Edit Re-Planning**: Modify any day's plan using quick presets (*Relaxed*, *Food Tour*, *Efficient Transit*) or custom natural language instructions.
-- **Trip Intelligence**: Generates a weather-adapted packing checklist, cultural etiquette tips, and an itemized budget breakdown.
-- **High-Performance MMKV Storage**: Uses C++ JSI synchronous MMKV storage (~30x faster than AsyncStorage) with automated legacy migration and 0ms bridge serialization.
-- **Production Security Architecture**: Dual-mode operational architecture featuring a Backend-For-Frontend (BFF) edge proxy isolating master API keys, plus client-side Bring-Your-Own-Key (BYOK) encrypted storage.
-- **Hermes Bytecode Engine**: Precompiled bytecode with inline requires delivering sub-400ms cold startup times and a lean 723 KB gzipped bundle.
+> 💡 **Quick Demo Available:** The app comes with a pre-loaded sample trip (**Kyoto, Japan**), so anyone can clone and immediately explore the UI and features without needing an API key.
 
 ---
 
-## How It Works
+## 💡 Why I Built This
 
-### Structured Gemini Outputs
-Rather than requesting freeform text and relying on regex or markdown parsing, ItinerAI uses Gemini's native `responseSchema` (`SchemaType.OBJECT`, `SchemaType.ARRAY`). This guarantees that API responses strictly adhere to our TypeScript data models, preventing runtime parsing errors.
+Whenever I plan a trip, I usually find myself juggling four or five different apps: Google Maps for pins, weather apps for forecasts, notes apps for schedules, and chat apps for recommendations.
 
-### Grounded Context Prompts
-When interacting with the Copilot or requesting schedule adjustments, the app injects relevant trip context into the system prompt:
-- Active destination, dates, and group style (solo, couple, family, friends)
-- Current weather conditions and temperature
-- Selected budget tier (`low`, `mid`, `high`)
-- Scheduled stops from other days to avoid duplicate suggestions
-
-### Multi-Model Fallback Chain
-To protect against rate limits or temporary service degradation, API requests automatically cascade through fallback models:
-`gemini-3.5-flash-lite` &rarr; `gemini-flash-lite-latest` &rarr; `gemini-flash-latest` &rarr; `gemini-3.6-flash` &rarr; `gemini-3.5-flash` &rarr; `gemini-pro-latest`.
-
-### High-Performance Storage (MMKV JSI)
-- **Zero Bridge Latency**: `react-native-mmkv` connects directly to C++ memory mapped files via JavaScript Interface (JSI).
-- **Synchronous Hydration**: Eliminates async loading spinners on app cold boot (`storageService.getSavedTripsSync()`).
-- **Micro-Benchmark**: On-device 50 IOPS tests prove MMKV is **~30x faster** than legacy AsyncStorage (2ms read vs 61ms).
-- **Seamless Migration**: Automatic zero-downtime migration imports existing user trips from AsyncStorage into MMKV on first launch.
-
-### Security Architecture: Backend-For-Frontend (BFF) vs. Client .env
-- **The Threat**: Mobile apps embedding `.env` files compile API keys into binary bytecode, making them extractable in seconds via `apktool` or `strings`.
-- **The Fix**: A standalone serverless edge microservice (`server/bffProxy.js`) isolates private API credentials on the server, enforcing:
-  - HMAC app attestation headers (`X-App-Client-Token`).
-  - Sliding-window rate limiting (30 requests/minute per IP).
-  - Strict input length sanitization against prompt injection.
-  - 1-hour edge caching for weather and identical itineraries.
-- **Developer BYOK**: Developers testing the repo can input their personal Gemini API key directly in Profile settings, stored encrypted in local MMKV.
+I built **ItinerAI** as a personal project to solve my own travel frustration while demonstrating how to architect a **real-world, production-ready React Native app** with modern mobile patterns:
+- Using **C++ JSI storage (MMKV)** instead of the slow asynchronous bridge.
+- Enforcing **deterministic JSON schemas** with Gemini rather than fragile text parsing.
+- Protecting private keys behind a lightweight **Backend-For-Frontend (BFF)** edge proxy.
+- Maintaining a full **171-test automated suite** covering state, storage, and screen interactions.
 
 ---
 
-## Features
+## ✨ Key Features
 
-| Feature | Description |
+- **Day-by-Day Smart Itineraries:** Structured daily schedules with activity times, categories (food, landmark, culture), estimated costs, and geocoded coordinates.
+- **Interactive Map Routes:** Visualizes each day's stops on an interactive map (`react-native-maps`) so travelers can easily see travel proximity.
+- **In-App AI Copilot:** A chat companion grounded in your active trip parameters. It knows your destination, dates, budget tier, and already-planned stops so it doesn't suggest duplicates.
+- **Live Weather Adaptation:** Integrates with OpenWeatherMap to suggest indoor alternatives if rain is forecasted.
+- **Smart Packing & Local Insights:** Auto-generates a checklist based on destination climate and scheduled activities, paired with local tipping norms and emergency numbers.
+- **Offline First:** All saved trips are persisted locally and load instantly on cold start with zero network delay.
+
+---
+
+## 🏛️ Architecture & Engineering Highlights
+
+Here are some of the key technical decisions behind the app:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│               React Native Client (Hermes Engine)           │
+│  ┌──────────────────────┐         ┌──────────────────────┐  │
+│  │  UI & Screens        │ ──────> │  Redux Toolkit Store │  │
+│  │  (Reanimated 3)      │         │  (Slices & Thunks)   │  │
+│  └──────────────────────┘         └──────────┬───────────┘  │
+│                                              │              │
+│                                   ┌──────────┴───────────┐  │
+│                                   │ Storage: MMKV (JSI)  │  │
+│                                   │ Synchronous (2ms)    │  │
+│                                   └──────────────────────┘  │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ HTTPS + HMAC Token
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Backend-For-Frontend (BFF) Edge Proxy             │
+│  • Rate Limiting (Token Bucket)  • Request Sanitization     │
+│  • API Key Isolation             • Edge Response Caching    │
+└──────────────┬──────────────────────────────┬───────────────┘
+               │                              │
+               ▼                              ▼
+      Google Gemini API              OpenWeatherMap API
+  (Strict responseSchema JSON)      (Forecast & Conditions)
+```
+
+### 1. High-Performance MMKV over AsyncStorage
+* **The Problem:** Default `AsyncStorage` serializes data over the asynchronous React Native bridge. Hydrating multiple trips causes visible loading spinners and frame drops on app launch.
+* **The Solution:** Switched to `react-native-mmkv` using direct C++ JSI bindings.
+* **The Result:** Benchmark tests show read operations drop from **~61ms to ~2ms** (~30x faster), allowing synchronous hydration on app launch with zero bridge overhead. An automated migration helper safely transitions legacy AsyncStorage data on first run.
+
+### 2. Deterministic AI Outputs via `responseSchema`
+* **The Problem:** Requesting freeform text from LLMs and parsing markdown or regex is fragile and frequently breaks in production mobile apps.
+* **The Solution:** Configured Gemini with native `responseSchema` (`SchemaType.OBJECT`, `SchemaType.ARRAY`).
+* **The Result:** The model outputs structured JSON that strictly conforms to our TypeScript `Itinerary` and `Activity` interfaces, completely eliminating runtime parsing errors.
+
+### 3. Edge BFF Proxy & Secret Isolation
+* **The Problem:** Storing API keys in mobile client `.env` files is a security risk—keys can be extracted in seconds using tools like `apktool` or `strings`.
+* **The Solution:** Added a standalone Node.js edge proxy (`server/bffProxy.js`) that keeps master keys on the server, verifies client HMAC attestation headers (`X-App-Client-Token`), enforces rate limiting (30 req/min per IP), and sanitizes inputs against prompt injection.
+* **Developer Flexibility (BYOK):** For developers testing the repo locally, the app also includes a "Bring Your Own Key" setting in the Profile screen to call the API directly if they prefer not to run the local proxy.
+
+### 4. Lean Hermes Bytecode
+* Built for the Hermes engine with ahead-of-time bytecode compilation and inline requires, achieving cold start times under 400ms and a compressed bundle size of ~720 KB.
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technologies |
 | :--- | :--- |
-| **Itinerary Generator** | Multi-day travel plans with geocoded stops and category tagging. |
-| **Travel Copilot** | Chat assistant with quick suggestion chips, grounded in your trip parameters. |
-| **Activity Swapping** | Swap any individual activity with context-aware alternatives (indoor, budget, relaxed, foodie). |
-| **Day Re-Planner** | Restructure an entire day's schedule via presets or custom text prompts. |
-| **Smart Packing List** | Interactive checklist adapted to expected weather and scheduled activities. |
-| **Cultural & Practical Guide** | Destination briefings covering tipping norms, local transit, etiquette, and emergency numbers. |
-| **Budget Breakdown** | Itemized cost projections with visual category percentage bars. |
-| **Interactive Map View** | View daily activity locations plotted on an interactive map. |
-| **Saved Trips Library** | Searchable offline trip manager with status tracking (`Upcoming` / `Completed`). |
+| **Core** | React Native 0.73.6, TypeScript 5.0, Hermes Engine |
+| **State Management** | Redux Toolkit, React-Redux |
+| **Storage** | MMKV (JSI Synchronous Storage), AsyncStorage (Migration fallback) |
+| **Navigation** | React Navigation (Native Stack & Bottom Tabs) |
+| **AI / LLM** | Google Gemini API (`@google/generative-ai`), Schema-Enforced JSON |
+| **Maps & Location** | `react-native-maps`, OpenStreetMap (Nominatim Geocoding) |
+| **Weather** | OpenWeatherMap API with in-memory TTL caching |
+| **Icons & UI** | Lucide React Native, React Native Reanimated 3 |
+| **Testing** | Jest, React Native Testing Library (171 tests across 22 suites) |
+| **CI / CD** | GitHub Actions (Linting, TypeScript check, Test coverage, Bundle check) |
 
 ---
 
-## Tech Stack
+## 🧪 Testing & Code Quality
 
-- **Framework**: React Native 0.73.6
-- **Language**: TypeScript 5.0.4
-- **AI Engine**: Google Generative AI SDK (`@google/generative-ai`)
-- **State Management**: Redux Toolkit & React-Redux
-- **Local Storage**: `@react-native-async-storage/async-storage`
-- **Navigation**: React Navigation (Native Stack & Bottom Tabs)
-- **Maps**: `react-native-maps`
-- **Weather API**: OpenWeatherMap
-- **Geocoding**: OpenStreetMap (Nominatim API)
-
----
-
-## Project Structure
-
-```
-ItinerAI/
-├── server/               # Backend-For-Frontend (BFF) Edge Proxy
-│   └── bffProxy.js       # Node/Edge server isolating API credentials
-├── src/
-│   ├── components/       # Reusable UI components (BudgetSelector, InterestChip, MapRoute, etc.)
-│   ├── navigation/       # Navigators and route parameter definitions
-│   ├── screens/          # Application screens (Plan, Itinerary, Copilot, Insights, Profile)
-│   ├── services/         # External integrations & storage
-│   │   ├── apiClient.ts               # BFF network client & BYOK resolver
-│   │   ├── llmService.ts              # Gemini API client & schemas
-│   │   ├── weatherService.ts          # OpenWeatherMap API & weather caching
-│   │   ├── storageService.ts          # MMKV JSI synchronous storage layer
-│   │   └── placesService.ts           # OpenStreetMap geocoding autocomplete
-│   ├── store/            # Redux store and slices
-│   ├── theme/            # Color palettes, typography, and spacing
-│   ├── types/            # Shared TypeScript definitions
-│   └── utils/            # Dimension and formatting helpers
-├── __tests__/            # Jest unit and component test suites (22 suites, 171 tests)
-├── .github/workflows/    # CI configuration (lint, typecheck, tests, bundle check)
-└── package.json
-```
-
----
-
-## Testing & CI
-
-The test suite covers state management, offline storage, API integration, and key UI components using Jest and React Native Testing Library. Continuous integration runs automatically on GitHub Actions for every push and pull request to `main`.
+Code reliability is a top priority. The project features unit and integration tests covering Redux reducers, storage serialization, API services, and critical UI interactions:
 
 ```bash
-# Run unit and component tests (171 passing tests)
+# Run the complete test suite (22 suites, 171 tests)
 npm test
 
 # Run tests with code coverage report
 npm run test:coverage
 
-# Run TypeScript static type check
+# Static type checking
 npm run typecheck
 
-# Run ESLint validation
+# Code formatting and linting
 npm run lint
-
-# Start the Backend-For-Frontend (BFF) edge proxy
-npm run start:bff
-
-# Compile production bundles & sourcemaps
-npm run bundle:android
-npm run bundle:ios
 ```
 
-| Test Suite | Focus Area |
-| :--- | :--- |
-| `storageService.test.ts` | Local persistence, weather TTL cache expiration, trip hydration |
-| `savedTripsSlice.test.ts` | Redux CRUD actions, search filtering, async thunks |
-| `itinerarySlice.test.ts` | Schedule modifications, activity updates, packing checklist state |
-| `weatherService.test.ts` | Weather response parsing and contextual travel advice |
-| `BudgetSelector.test.tsx` | Selection callbacks and accessibility attributes |
-| `InterestChip.test.tsx` | Active toggle states and icon rendering |
-| `App.test.tsx` | Root component mount and provider hierarchy |
+Continuous integration runs automatically on GitHub Actions on every pull request to ensure zero regressions.
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js >= 18
-- React Native CLI development setup ([Official Guide](https://reactnative.dev/docs/environment-setup))
-- Android Studio (for Android emulator) or Xcode + CocoaPods (for iOS simulator, macOS required)
+- React Native CLI ([Environment Setup Guide](https://reactnative.dev/docs/environment-setup))
+- Xcode (for iOS) or Android Studio (for Android)
 
 ### 1. Clone & Install
-
 ```bash
 git clone https://github.com/shubhi021/itiner-ai.git
 cd itiner-ai
 npm install
 ```
 
-### 2. Set Up Environment Variables
-
-Create a `.env` file in the root directory:
-
+### 2. Configure Environment (Optional for Demo)
+Copy the example environment file:
+```bash
+cp .env.example .env
+```
+Add your free keys from [Google AI Studio](https://aistudio.google.com/) and [OpenWeatherMap](https://openweathermap.org/api):
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
-OPENWEATHERMAP_API_KEY=your_openweathermap_api_key_here
+GEMINI_API_KEY=your_gemini_api_key
+OPENWEATHERMAP_API_KEY=your_weather_api_key
 ```
+*(Note: You can skip this step and immediately explore the app using the built-in Kyoto demo trip).*
 
-- Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/).
-- Get a free weather API key from [OpenWeatherMap](https://openweathermap.org/api).
+### 3. Run the App
 
-### 3. iOS Setup (macOS only)
-
+**iOS:**
 ```bash
-cd ios
-pod install
-cd ..
-```
-
-### 4. Run the Application
-
-```bash
-# Start the Metro bundler
-npm start
-
-# Run on Android
-npm run android
-
-# Run on iOS
+cd ios && pod install && cd ..
 npm run ios
+```
+
+**Android:**
+```bash
+npm run android
 ```
 
 ---
 
-## License
+## 📂 Project Structure
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+```
+ItinerAI/
+├── server/                   # Backend-For-Frontend (BFF) edge proxy
+│   └── bffProxy.js           # Key isolation, HMAC attestation & rate limiting
+├── docs/
+│   └── screenshots/          # Showcase screenshots for README
+├── src/
+│   ├── components/           # Modular UI components (BudgetSelector, MapRoute, etc.)
+│   ├── data/                 # Sample trip data for zero-config demo mode
+│   ├── navigation/           # Root stack and bottom tab navigators
+│   ├── screens/              # App screens (Plan, Itinerary, Copilot, Insights, Profile)
+│   ├── services/             # Core services (Gemini, MMKV storage, Weather, Places)
+│   ├── store/                # Redux Toolkit store and feature slices
+│   ├── theme/                # Design tokens (colors, typography, spacing)
+│   └── types/                # Strict TypeScript interfaces and schemas
+├── __tests__/                # 22 test suites covering store, services, and screens
+├── .github/workflows/        # CI pipeline (lint, typecheck, tests, bundle verification)
+└── package.json
+```
+
+---
+
+## 👤 Author
+
+**Shubhi Srivastava**
+- GitHub: [@shubhi021](https://github.com/shubhi021)
+- LinkedIn: [Connect on LinkedIn](https://www.linkedin.com/in/shubhi-srivastava/)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
