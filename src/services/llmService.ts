@@ -4,7 +4,7 @@ import {
   SchemaType,
   Tool,
 } from '@google/generative-ai';
-import { apiClient } from './apiClient';
+import {apiClient} from './apiClient';
 import {
   TripRequest,
   Itinerary,
@@ -30,30 +30,30 @@ const CANDIDATE_MODELS = [
 const itinerarySchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    destination: { type: SchemaType.STRING },
+    destination: {type: SchemaType.STRING},
     days: {
       type: SchemaType.ARRAY,
       items: {
         type: SchemaType.OBJECT,
         properties: {
-          day: { type: SchemaType.INTEGER },
+          day: {type: SchemaType.INTEGER},
           activities: {
             type: SchemaType.ARRAY,
             items: {
               type: SchemaType.OBJECT,
               properties: {
-                time: { type: SchemaType.STRING },
-                name: { type: SchemaType.STRING },
-                description: { type: SchemaType.STRING },
-                location: { type: SchemaType.STRING },
+                time: {type: SchemaType.STRING},
+                name: {type: SchemaType.STRING},
+                description: {type: SchemaType.STRING},
+                location: {type: SchemaType.STRING},
                 coordinates: {
                   type: SchemaType.OBJECT,
                   properties: {
-                    latitude: { type: SchemaType.NUMBER },
-                    longitude: { type: SchemaType.NUMBER },
+                    latitude: {type: SchemaType.NUMBER},
+                    longitude: {type: SchemaType.NUMBER},
                   },
                 },
-                estimatedCost: { type: SchemaType.STRING },
+                estimatedCost: {type: SchemaType.STRING},
                 category: {
                   type: SchemaType.STRING,
                   format: 'enum',
@@ -82,19 +82,19 @@ const itinerarySchema: Schema = {
 const singleActivitySchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    time: { type: SchemaType.STRING },
-    name: { type: SchemaType.STRING },
-    description: { type: SchemaType.STRING },
-    location: { type: SchemaType.STRING },
+    time: {type: SchemaType.STRING},
+    name: {type: SchemaType.STRING},
+    description: {type: SchemaType.STRING},
+    location: {type: SchemaType.STRING},
     coordinates: {
       type: SchemaType.OBJECT,
       properties: {
-        latitude: { type: SchemaType.NUMBER },
-        longitude: { type: SchemaType.NUMBER },
+        latitude: {type: SchemaType.NUMBER},
+        longitude: {type: SchemaType.NUMBER},
       },
       required: ['latitude', 'longitude'],
     },
-    estimatedCost: { type: SchemaType.STRING },
+    estimatedCost: {type: SchemaType.STRING},
     category: {
       type: SchemaType.STRING,
       format: 'enum',
@@ -117,19 +117,19 @@ const dayActivitiesSchema: Schema = {
   items: {
     type: SchemaType.OBJECT,
     properties: {
-      time: { type: SchemaType.STRING },
-      name: { type: SchemaType.STRING },
-      description: { type: SchemaType.STRING },
-      location: { type: SchemaType.STRING },
+      time: {type: SchemaType.STRING},
+      name: {type: SchemaType.STRING},
+      description: {type: SchemaType.STRING},
+      location: {type: SchemaType.STRING},
       coordinates: {
         type: SchemaType.OBJECT,
         properties: {
-          latitude: { type: SchemaType.NUMBER },
-          longitude: { type: SchemaType.NUMBER },
+          latitude: {type: SchemaType.NUMBER},
+          longitude: {type: SchemaType.NUMBER},
         },
         required: ['latitude', 'longitude'],
       },
-      estimatedCost: { type: SchemaType.STRING },
+      estimatedCost: {type: SchemaType.STRING},
       category: {
         type: SchemaType.STRING,
         format: 'enum',
@@ -153,7 +153,7 @@ const packingListSchema: Schema = {
   items: {
     type: SchemaType.OBJECT,
     properties: {
-      name: { type: SchemaType.STRING },
+      name: {type: SchemaType.STRING},
       category: {
         type: SchemaType.STRING,
         format: 'enum',
@@ -166,7 +166,7 @@ const packingListSchema: Schema = {
           'Other',
         ],
       },
-      tip: { type: SchemaType.STRING },
+      tip: {type: SchemaType.STRING},
     },
     required: ['name', 'category'],
   },
@@ -176,21 +176,21 @@ const packingListSchema: Schema = {
 const destinationInsightsSchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    tippingCulture: { type: SchemaType.STRING },
+    tippingCulture: {type: SchemaType.STRING},
     transitTips: {
       type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
+      items: {type: SchemaType.STRING},
     },
     culturalEtiquette: {
       type: SchemaType.OBJECT,
       properties: {
         dos: {
           type: SchemaType.ARRAY,
-          items: { type: SchemaType.STRING },
+          items: {type: SchemaType.STRING},
         },
         donts: {
           type: SchemaType.ARRAY,
-          items: { type: SchemaType.STRING },
+          items: {type: SchemaType.STRING},
         },
       },
       required: ['dos', 'donts'],
@@ -198,9 +198,9 @@ const destinationInsightsSchema: Schema = {
     emergencyNumbers: {
       type: SchemaType.OBJECT,
       properties: {
-        police: { type: SchemaType.STRING },
-        ambulance: { type: SchemaType.STRING },
-        general: { type: SchemaType.STRING },
+        police: {type: SchemaType.STRING},
+        ambulance: {type: SchemaType.STRING},
+        general: {type: SchemaType.STRING},
       },
       required: ['police', 'ambulance', 'general'],
     },
@@ -209,9 +209,9 @@ const destinationInsightsSchema: Schema = {
       items: {
         type: SchemaType.OBJECT,
         properties: {
-          phrase: { type: SchemaType.STRING },
-          translation: { type: SchemaType.STRING },
-          pronunciation: { type: SchemaType.STRING },
+          phrase: {type: SchemaType.STRING},
+          translation: {type: SchemaType.STRING},
+          pronunciation: {type: SchemaType.STRING},
         },
         required: ['phrase', 'translation'],
       },
@@ -230,25 +230,25 @@ const destinationInsightsSchema: Schema = {
 const budgetForecastSchema: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    totalEstimated: { type: SchemaType.STRING },
-    currency: { type: SchemaType.STRING },
-    dailyAverage: { type: SchemaType.STRING },
+    totalEstimated: {type: SchemaType.STRING},
+    currency: {type: SchemaType.STRING},
+    dailyAverage: {type: SchemaType.STRING},
     categories: {
       type: SchemaType.ARRAY,
       items: {
         type: SchemaType.OBJECT,
         properties: {
-          category: { type: SchemaType.STRING },
-          estimated: { type: SchemaType.STRING },
-          percentage: { type: SchemaType.NUMBER },
-          tip: { type: SchemaType.STRING },
+          category: {type: SchemaType.STRING},
+          estimated: {type: SchemaType.STRING},
+          percentage: {type: SchemaType.NUMBER},
+          tip: {type: SchemaType.STRING},
         },
         required: ['category', 'estimated', 'percentage', 'tip'],
       },
     },
     moneySavingTips: {
       type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
+      items: {type: SchemaType.STRING},
     },
   },
   required: [
@@ -423,7 +423,7 @@ const executeWithFallback = async (
   // Handle backwards compatibility where options was just schema
   const resolvedOptions: ExecuteOptions =
     options && 'type' in options
-      ? { schema: options as Schema }
+      ? {schema: options as Schema}
       : (options as ExecuteOptions) || {};
 
   let lastError: any = null;
@@ -460,7 +460,8 @@ const executeWithFallback = async (
         const msg = err?.message || String(err);
         const status = err?.status;
         console.warn(
-          `Gemini model ${modelName} failed (status: ${status || 'unknown'
+          `Gemini model ${modelName} failed (status: ${
+            status || 'unknown'
           }, attempt: ${attempt + 1}): ${msg.slice(0, 100)}`,
         );
 
@@ -517,26 +518,31 @@ export const generateItinerary = async (
 
   try {
     const prompt = `
-      Create a detailed ${request.days}-day itinerary for a trip to ${request.destination
-      }.
+      Create a detailed ${request.days}-day itinerary for a trip to ${
+      request.destination
+    }.
       Budget level: ${request.budget}.
       Interests: ${request.interests.join(', ')}.
       ${request.advanced?.pace ? `Pace: ${request.advanced.pace}` : ''}
-      ${request.advanced?.travelGroup
-        ? `Group type: ${request.advanced.travelGroup}`
-        : ''
+      ${
+        request.advanced?.travelGroup
+          ? `Group type: ${request.advanced.travelGroup}`
+          : ''
       }
-      ${request.advanced?.dietary
-        ? `Dietary restrictions: ${request.advanced.dietary.join(', ')}`
-        : ''
+      ${
+        request.advanced?.dietary
+          ? `Dietary restrictions: ${request.advanced.dietary.join(', ')}`
+          : ''
       }
-      ${request.advanced?.stayArea
-        ? `Staying in/near: ${request.advanced.stayArea}`
-        : ''
+      ${
+        request.advanced?.stayArea
+          ? `Staying in/near: ${request.advanced.stayArea}`
+          : ''
       }
-      ${request.advanced?.customNote
-        ? `Additional notes: ${request.advanced.customNote}`
-        : ''
+      ${
+        request.advanced?.customNote
+          ? `Additional notes: ${request.advanced.customNote}`
+          : ''
       }
       
       For each activity, provide estimated coordinates (latitude and longitude) to be plotted on a map.
@@ -578,7 +584,8 @@ export const suggestAlternativeActivity = async (
 
     const prompt = `
       You are an expert local travel guide in ${params.destination}.
-      Suggest an alternative activity to replace an existing stop on Day ${params.day
+      Suggest an alternative activity to replace an existing stop on Day ${
+        params.day
       } of the trip.
 
       ACTIVITY BEING REPLACED:
@@ -587,13 +594,15 @@ export const suggestAlternativeActivity = async (
       - Location: "${params.activityToReplace.location}"
       - Description: "${params.activityToReplace.description}"
       - Category: "${params.activityToReplace.category}"
-      - Current Estimated Cost: "${params.activityToReplace.estimatedCost || 'Moderate'
+      - Current Estimated Cost: "${
+        params.activityToReplace.estimatedCost || 'Moderate'
       }"
 
       ${params.reason ? `USER'S REASON FOR PIVOT/SWAP: "${params.reason}"` : ''}
-      ${params.weatherCondition
-        ? `CURRENT WEATHER: "${params.weatherCondition}". If it is rainy, cold, stormy, or bad weather, prioritize high-quality indoor alternatives (museums, indoor markets, historic cafes, galleries).`
-        : ''
+      ${
+        params.weatherCondition
+          ? `CURRENT WEATHER: "${params.weatherCondition}". If it is rainy, cold, stormy, or bad weather, prioritize high-quality indoor alternatives (museums, indoor markets, historic cafes, galleries).`
+          : ''
       }
       ${params.budget ? `TRIP BUDGET LEVEL: "${params.budget}"` : ''}
 
@@ -602,7 +611,8 @@ export const suggestAlternativeActivity = async (
 
       REQUIREMENTS:
       1. Time must be "${params.activityToReplace.time}".
-      2. The alternative MUST be located in ${params.destination
+      2. The alternative MUST be located in ${
+        params.destination
       } and geographically coherent with other stops on this day.
       3. Do NOT duplicate any of the other activities scheduled for this day.
       4. Provide precise latitude and longitude coordinates for plotting on an interactive map.
@@ -646,7 +656,8 @@ export const optimizeDayItinerary = async (
     const currentSchedule = params.existingActivities
       .map(
         (a, i) =>
-          `${i + 1}. [${a.time}] ${a.name} (${a.category}) - ${a.location} - ${a.description
+          `${i + 1}. [${a.time}] ${a.name} (${a.category}) - ${a.location} - ${
+            a.description
           }`,
       )
       .join('\n');
@@ -692,9 +703,10 @@ export const optimizeDayItinerary = async (
 
       CONTEXT:
       - Destination: ${params.destination}
-      ${params.weatherCondition
-        ? `- Live Weather: ${params.weatherCondition}`
-        : ''
+      ${
+        params.weatherCondition
+          ? `- Live Weather: ${params.weatherCondition}`
+          : ''
       }
       ${params.budget ? `- Budget Tier: ${params.budget}` : ''}
 
@@ -703,7 +715,8 @@ export const optimizeDayItinerary = async (
       2. Set realistic chronological times (e.g., '09:30 AM', '01:00 PM', '04:30 PM', '07:30 PM').
       3. Provide accurate coordinates (latitude and longitude) for every stop.
       4. Categories must be one of: 'food', 'landmark', 'nature', 'nightlife', 'shopping', 'other'.
-      5. Estimated cost should reflect the budget tier (${params.budget || 'moderate'
+      5. Estimated cost should reflect the budget tier (${
+        params.budget || 'moderate'
       }).
     `;
 
@@ -743,7 +756,8 @@ export const chatWithTravelCopilot = async (
   const ai = getGenAI();
 
   const systemInstruction = `
-    You are ItinerAI Copilot, a sophisticated, enthusiastic, and deeply knowledgeable local travel guide, concierge, and autonomous action agent in ${params.destination
+    You are ItinerAI Copilot, a sophisticated, enthusiastic, and deeply knowledgeable local travel guide, concierge, and autonomous action agent in ${
+      params.destination
     }.
     
     TRIP CONTEXT GROUNDING:
@@ -751,9 +765,10 @@ export const chatWithTravelCopilot = async (
     - Trip Duration: ${params.daysCount || 'Multi-day'} days
     - Budget Tier: ${params.budget || 'Medium'}
     - Current Weather: ${params.weatherSummary || 'Clear/Typical seasonal'}
-    ${params.itinerarySummary
-      ? `- Active Itinerary Overview:\n${params.itinerarySummary}`
-      : ''
+    ${
+      params.itinerarySummary
+        ? `- Active Itinerary Overview:\n${params.itinerarySummary}`
+        : ''
     }
 
     AGENTIC TOOL CAPABILITIES:
@@ -779,7 +794,7 @@ export const chatWithTravelCopilot = async (
 
   const chatHistory = priorMessages.map(m => ({
     role: m.role === 'user' ? 'user' : 'model',
-    parts: [{ text: m.text }],
+    parts: [{text: m.text}],
   }));
 
   const latestUserMessage =
@@ -826,8 +841,9 @@ export const chatWithTravelCopilot = async (
                 .substring(2, 7)}`,
               type: 'add_activity',
               title: `Added "${args.name}" to Day ${dayNum}`,
-              details: `${args.time || 'Flexible'} · ${args.location || params.destination
-                }`,
+              details: `${args.time || 'Flexible'} · ${
+                args.location || params.destination
+              }`,
               timestamp: Date.now(),
               metadata: {
                 dayNumber: dayNum,
@@ -841,9 +857,9 @@ export const chatWithTravelCopilot = async (
                   coordinates:
                     args.latitude && args.longitude
                       ? {
-                        latitude: Number(args.latitude),
-                        longitude: Number(args.longitude),
-                      }
+                          latitude: Number(args.latitude),
+                          longitude: Number(args.longitude),
+                        }
                       : undefined,
                 },
               },
@@ -873,8 +889,8 @@ export const chatWithTravelCopilot = async (
               details:
                 args.latitude && args.longitude
                   ? `${Number(args.latitude).toFixed(4)}, ${Number(
-                    args.longitude,
-                  ).toFixed(4)}`
+                      args.longitude,
+                    ).toFixed(4)}`
                   : 'Opening Maps...',
               timestamp: Date.now(),
               metadata: {
@@ -987,7 +1003,8 @@ export const generateSmartPackingList = async (
       : 'sightseeing, dining, city exploration';
 
     const prompt = `
-      You are a master travel planner. Generate an essential smart packing checklist for a ${params.daysCount
+      You are a master travel planner. Generate an essential smart packing checklist for a ${
+        params.daysCount
       }-day trip to ${params.destination}.
       
       TRIP FACTORS:
@@ -999,7 +1016,8 @@ export const generateSmartPackingList = async (
       2. Categorize each item strictly into one of: 'Clothing', 'Tech & Adapters', 'Toiletries', 'Documents', 'Weather Gear', 'Other'.
       3. If rainy, ensure weather gear includes rain jacket or compact umbrella.
       4. If cold, include warm layers; if hot/sunny, include sun protection.
-      5. Include specific electrical plug type / adapter tips if applicable for ${params.destination
+      5. Include specific electrical plug type / adapter tips if applicable for ${
+        params.destination
       }.
       6. Provide a short, helpful 1-sentence tip for each item.
     `;
@@ -1008,7 +1026,7 @@ export const generateSmartPackingList = async (
       schema: packingListSchema,
       temperature: 0.4,
     });
-    const rawItems: Array<{ name: string; category: any; tip?: string }> =
+    const rawItems: Array<{name: string; category: any; tip?: string}> =
       JSON.parse(text);
 
     return rawItems.map((item, index) => ({
@@ -1095,7 +1113,7 @@ export const generateBudgetForecast = async (
  */
 export const validateGeminiKey = async (
   keyToTest?: string,
-): Promise<{ valid: boolean; message: string }> => {
+): Promise<{valid: boolean; message: string}> => {
   const key = keyToTest?.trim() || apiClient.getEffectiveGeminiKey();
   if (!key || key === 'your_gemini_api_key_here') {
     return {
@@ -1106,7 +1124,7 @@ export const validateGeminiKey = async (
 
   try {
     const ai = new GoogleGenerativeAI(key);
-    const model = ai.getGenerativeModel({ model: 'gemini-flash-latest' });
+    const model = ai.getGenerativeModel({model: 'gemini-flash-latest'});
     const result = await model.generateContent('Say hello');
     const response = await result.response;
     const text = response.text();
@@ -1116,7 +1134,7 @@ export const validateGeminiKey = async (
         message: 'Key is valid and connected to Gemini 1.5 Flash!',
       };
     }
-    return { valid: false, message: 'Received empty response from Gemini.' };
+    return {valid: false, message: 'Received empty response from Gemini.'};
   } catch (err: any) {
     const msg = err?.message || String(err);
     if (msg.includes('API key not valid') || msg.includes('API_KEY_INVALID')) {
@@ -1131,6 +1149,6 @@ export const validateGeminiKey = async (
         message: 'Quota exceeded or rate limited (429) on this key.',
       };
     }
-    return { valid: false, message: `Validation failed: ${msg.slice(0, 100)}` };
+    return {valid: false, message: `Validation failed: ${msg.slice(0, 100)}`};
   }
 };
