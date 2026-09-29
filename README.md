@@ -11,14 +11,68 @@
 
 ---
 
-## 📱 App Showcase
+## 🎬 Product Demo
 
-| 1. Plan & Preferences | 2. Daily Route & Map | 3. Agentic AI Copilot | 4. Packing Intelligence | 5. Journey Overview |
-| :---: | :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/01-plan.png" width="175" alt="Trip Planning Screen" /> | <img src="docs/screenshots/02-itinerary.png" width="175" alt="Itinerary Timeline & Map" /> | <img src="docs/screenshots/03-copilot.png" width="175" alt="Agentic AI Copilot" /> | <img src="docs/screenshots/04-insights.png" width="175" alt="Packing and Insights" /> | <img src="docs/screenshots/05-summary.png" width="175" alt="Journey Overview & Roadmap" /> |
-| *Destination, budget tiers & travel styles* | *Geocoded stops, route polyline & live weather* | *Context-grounded chat with live tool execution* | *Interactive checklist synced with live weather* | *15 geocoded spots, budget & daily roadmap* |
+https://github.com/user-attachments/assets/1c414eed-8735-47cb-be68-7798b2a34014
 
-> 💡 **Quick Demo Available:** The app comes with a pre-loaded sample trip (**Kyoto, Japan**), so anyone can clone and immediately explore the UI and features without needing an API key.
+*Watch the complete 2-minute walkthrough: AI itinerary generation with Gemini, weather-adaptive indoor activity swap, interactive Apple Maps route polyline, autonomous Copilot tool calling, and dynamic packing intelligence.*
+
+---
+
+## 📱 App Experience & Feature Highlights
+
+Here is a guided look at the five core screens and how they fit together:
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3 align="center">1. Plan with Constraints</h3>
+      <p align="center">
+        <img src="docs/screenshots/01-plan.png" width="270" alt="Trip Planning Screen" />
+      </p>
+      <p><b>The Human Experience:</b> No generic open-ended chat prompts. Travelers select their destination, trip duration, exact budget tier (Budget, Standard, Luxury), and personal travel interests with tactile chips.</p>
+      <p><sub><b>Under the Hood:</b> Validated inputs feed into deterministic Gemini JSON schemas, preventing unstructured or hallucinated output.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <h3 align="center">2. Weather-Adapted Route</h3>
+      <p align="center">
+        <img src="docs/screenshots/02-itinerary.png" width="270" alt="Itinerary Timeline and Map" />
+      </p>
+      <p><b>The Human Experience:</b> Days are arranged chronologically with live weather cards. If rain is detected, the app automatically surfaces an instant <i>"Swap"</i> button for covered indoor activities.</p>
+      <p><sub><b>Under the Hood:</b> Geocoded locations plotted onto native Apple Maps polylines with real-time OpenWeather API sync.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3 align="center">3. Context-Aware AI Copilot</h3>
+      <p align="center">
+        <img src="docs/screenshots/03-copilot.png" width="270" alt="Agentic AI Copilot" />
+      </p>
+      <p><b>The Human Experience:</b> An in-trip assistant that doesn't just chat — it acts. Tell it <i>"Add an espresso stop at 4 PM"</i> and it autonomously updates your itinerary schedule in real-time.</p>
+      <p><sub><b>Under the Hood:</b> Autonomous Gemini tool calling with Redux action dispatchers and geographic grounding.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <h3 align="center">4. Climate-Synced Packing</h3>
+      <p align="center">
+        <img src="docs/screenshots/04-insights.png" width="270" alt="Packing and Insights" />
+      </p>
+      <p><b>The Human Experience:</b> A dynamic checklist that automatically accounts for the local weather (packing an umbrella when rain is forecasted), alongside local tipping etiquette and emergency numbers.</p>
+      <p><sub><b>Under the Hood:</b> Instant checklist state persistence via C++ MMKV with zero-latency checkbox toggling.</sub></p>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center" valign="top">
+      <h3>5. Journey Overview & Offline Roadmap</h3>
+      <p align="center">
+        <img src="docs/screenshots/05-summary.png" width="280" alt="Journey Overview & Roadmap" />
+      </p>
+      <p><b>The Human Experience:</b> A calm, comprehensive bird's-eye view of the full journey: 15+ geocoded landmark pins, category budget distributions, and day-by-day roadmap cards.</p>
+      <p><sub><b>Under the Hood:</b> Full offline capability. Saved itineraries load instantly on cold start (sub-400ms Hermes boot) without requiring an internet connection.</sub></p>
+    </td>
+  </tr>
+</table>
+
+> 💡 **Try It Instantly:** A pre-loaded sample trip (**Kyoto, Japan**) is bundled out of the box, so you can test the UI, interactive maps, and offline state immediately without entering an API key.
 
 ---
 
