@@ -30,16 +30,16 @@ Here is a guided look at the five core screens and how they fit together:
       <p align="center">
         <img src="docs/screenshots/01-plan.png" width="270" alt="Trip Planning Screen" />
       </p>
-      <p><b>The Human Experience:</b> No generic open-ended chat prompts. Travelers select their destination, trip duration, exact budget tier (Budget, Standard, Luxury), and personal travel interests with tactile chips.</p>
-      <p><sub><b>Under the Hood:</b> Validated inputs feed into deterministic Gemini JSON schemas, preventing unstructured or hallucinated output.</sub></p>
+      <p>Configure destination, duration, budget tier (Budget, Standard, Luxury), and travel interests using tactile chips. Structured inputs prevent hallucinated itineraries.</p>
+      <p><sub><code>Gemini 1.5 Flash</code> · <code>responseSchema</code> · <code>Zod Validation</code></sub></p>
     </td>
     <td width="50%" valign="top">
       <h3 align="center">2. Weather-Adapted Route</h3>
       <p align="center">
         <img src="docs/screenshots/02-itinerary.png" width="270" alt="Itinerary Timeline and Map" />
       </p>
-      <p><b>The Human Experience:</b> Days are arranged chronologically with live weather cards. If rain is detected, the app automatically surfaces an instant <i>"Swap"</i> button for covered indoor activities.</p>
-      <p><sub><b>Under the Hood:</b> Geocoded locations plotted onto native Apple Maps polylines with real-time OpenWeather API sync.</sub></p>
+      <p>Chronological daily stops with live weather forecasts and Apple Maps polylines. If rain is detected, smart swap options surface automatically for indoor venues.</p>
+      <p><sub><code>react-native-maps</code> · <code>OpenWeather API</code> · <code>Dynamic Swaps</code></sub></p>
     </td>
   </tr>
   <tr>
@@ -48,16 +48,16 @@ Here is a guided look at the five core screens and how they fit together:
       <p align="center">
         <img src="docs/screenshots/03-copilot.png" width="270" alt="Agentic AI Copilot" />
       </p>
-      <p><b>The Human Experience:</b> An in-trip assistant that doesn't just chat — it acts. Tell it <i>"Add an espresso stop at 4 PM"</i> and it autonomously updates your itinerary schedule in real-time.</p>
-      <p><sub><b>Under the Hood:</b> Autonomous Gemini tool calling with Redux action dispatchers and geographic grounding.</sub></p>
+      <p>An in-trip assistant grounded in your active destination and schedule. Executes autonomous actions like inserting coffee stops or pulling directions on demand.</p>
+      <p><sub><code>Gemini Tool Calling</code> · <code>Redux Dispatcher</code> · <code>Geo-Grounding</code></sub></p>
     </td>
     <td width="50%" valign="top">
       <h3 align="center">4. Climate-Synced Packing</h3>
       <p align="center">
         <img src="docs/screenshots/04-insights.png" width="270" alt="Packing and Insights" />
       </p>
-      <p><b>The Human Experience:</b> A dynamic checklist that automatically accounts for the local weather (packing an umbrella when rain is forecasted), alongside local tipping etiquette and emergency numbers.</p>
-      <p><sub><b>Under the Hood:</b> Instant checklist state persistence via C++ MMKV with zero-latency checkbox toggling.</sub></p>
+      <p>Interactive packing checklist tailored to local forecast conditions (e.g., rain gear alerts), accompanied by destination tipping norms and emergency contacts.</p>
+      <p><sub><code>MMKV JSI Storage</code> · <code>Zero-Latency State</code> · <code>Offline Ready</code></sub></p>
     </td>
   </tr>
   <tr>
@@ -66,8 +66,8 @@ Here is a guided look at the five core screens and how they fit together:
       <p align="center">
         <img src="docs/screenshots/05-summary.png" width="280" alt="Journey Overview & Roadmap" />
       </p>
-      <p><b>The Human Experience:</b> A calm, comprehensive bird's-eye view of the full journey: 15+ geocoded landmark pins, category budget distributions, and day-by-day roadmap cards.</p>
-      <p><sub><b>Under the Hood:</b> Full offline capability. Saved itineraries load instantly on cold start (sub-400ms Hermes boot) without requiring an internet connection.</sub></p>
+      <p>Bird's-eye view across all 15+ geocoded landmark pins, estimated category budget breakdowns, and daily roadmap cards available offline anywhere.</p>
+      <p><sub><code>Offline-First Architecture</code> · <code>Hermes Sub-400ms Boot</code> · <code>Synchronous Hydration</code></sub></p>
     </td>
   </tr>
 </table>
